@@ -1,0 +1,40 @@
+{
+  "name": "صيدلية د. مرزوق الصاوي",
+  "short_name": "صيدلية مرزوق",
+  "description": "صيدلية د. مرزوق الصاوي - قرية مؤنسة، مركز أشمون، المنوفية",
+  "start_url": "/MARZOUK_PHARMACY/",
+  "scope": "/MARZOUK_PHARMACY/",
+  "display": "standalone",
+  "background_color": "#F6F2EA",
+  "theme_color": "#0F4C4F",
+  "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "shopping"],
+  "shortcuts": [
+    {
+      "name": "اتصل بنا",
+      "url": "/MARZOUK_PHARMACY/#contact",
+      "description": "تواصل مع الصيدلية"
+    },
+    {
+      "name": "واتساب",
+      "url": "https://wa.me/201062276534",
+      "description": "راسلنا على واتساب"
+    }
+  ]
+}
