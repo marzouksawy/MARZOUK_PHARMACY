@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>صيدلية د. مرزوق الصاوي</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0F4C4F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="صيدلية مرزوق">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -134,6 +140,28 @@
   .svc-card h3{font-size:16.5px;font-weight:700;margin-bottom:8px;color:var(--petrol-deep);}
   .svc-card p{font-size:13.8px;color:rgba(14,42,46,0.65);}
 
+  /* Products */
+  .products{background:var(--cream);}
+  .prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .prod-card{
+    background:var(--paper);border-radius:16px;overflow:hidden;
+    border:1px solid var(--line);transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .prod-card:hover{transform:translateY(-4px);box-shadow:0 16px 30px -16px rgba(14,42,46,0.25);}
+  .prod-thumb{
+    height:140px;display:flex;align-items:center;justify-content:center;font-size:46px;
+    background:linear-gradient(160deg, var(--amber-soft) 0%, var(--cream) 100%);
+  }
+  .prod-body{padding:20px 22px 22px;}
+  .prod-body h3{font-size:16px;font-weight:700;color:var(--petrol-deep);margin-bottom:6px;}
+  .prod-body p{font-size:13.5px;color:rgba(14,42,46,0.62);margin-bottom:16px;}
+  .prod-foot{display:flex;align-items:center;justify-content:space-between;}
+  .prod-price{font-family:'Tajawal';font-weight:800;font-size:18px;color:var(--petrol);}
+  .prod-btn{
+    background:var(--petrol);color:#fff;font-size:13px;font-weight:600;
+    padding:9px 16px;border-radius:999px;
+  }
+
   /* About */
   .about{}
   .about-grid{display:grid;grid-template-columns:0.85fr 1.15fr;gap:56px;align-items:center;}
@@ -194,6 +222,7 @@
   @media (max-width: 880px){
     .hero-grid,.about-grid,.info-grid{grid-template-columns:1fr;}
     .svc-grid{grid-template-columns:repeat(2,1fr);}
+    .prod-grid{grid-template-columns:1fr 1fr;}
     nav ul{display:none;}
     .hero h1{font-size:34px;}
     .about-photo{order:-1;}
@@ -201,6 +230,9 @@
 </style>
 </head>
 <body>
+<div style="background:#D98C4A;color:#fff;text-align:center;padding:10px;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:600;">
+  🚴 توصيل مجاني للطلبات أكثر من 200 جنيه! | اتصل بنا: 01062276534
+</div>
 
 <header>
   <div class="wrap nav">
@@ -210,6 +242,7 @@
     </div>
     <nav><ul>
       <li><a href="#services">خدماتنا</a></li>
+      <li><a href="#products">منتجاتنا</a></li>
       <li><a href="#about">عن الصيدلية</a></li>
       <li><a href="#hours">المواعيد</a></li>
       <li><a href="#contact">تواصل معنا</a></li>
@@ -277,7 +310,65 @@
   </div>
 </section>
 
-<section class="section about" id="about">
+<section class="section products" id="products">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">منتجاتنا</span>
+      <h2>منتجات مميزة من الصيدلية</h2>
+      <p>تشكيلة من أكثر المنتجات طلبًا، متاحة الآن في الصيدلية وللتوصيل. الصور التوضيحية، والمنتج الفعلي قد يختلف شكله.</p>
+    </div>
+    <div class="prod-grid">
+      <div class="prod-card">
+        <div class="prod-thumb">💊</div>
+        <div class="prod-body">
+          <h3>باراسيتامول 500mg</h3>
+          <p>مسكّن وخافض حرارة، علبة 20 قرص</p>
+          <div class="prod-foot"><span class="prod-price">15 ج.م</span><a href="https://wa.me/201062276534" target="_blank" class="prod-btn">اطلب الآن</a></div>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-thumb">🧴</div>
+        <div class="prod-body">
+          <h3>غسول مطهر لليدين</h3>
+          <p>مضاد للبكتيريا، عبوة 250 مل</p>
+          <div class="prod-foot"><span class="prod-price">45 ج.م</span><a href="https://wa.me/201062276534" target="_blank" class="prod-btn">اطلب الآن</a></div>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-thumb">🌡️</div>
+        <div class="prod-body">
+          <h3>ترمومتر رقمي</h3>
+          <p>قياس سريع ودقيق لدرجة الحرارة</p>
+          <div class="prod-foot"><span class="prod-price">85 ج.م</span><a href="https://wa.me/201062276534" target="_blank" class="prod-btn">اطلب الآن</a></div>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-thumb">🍯</div>
+        <div class="prod-body">
+          <h3>شراب فيتامينات للأطفال</h3>
+          <p>دعم المناعة، عبوة 120 مل</p>
+          <div class="prod-foot"><span class="prod-price">60 ج.م</span><a href="https://wa.me/201062276534" target="_blank" class="prod-btn">اطلب الآن</a></div>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-thumb">🩹</div>
+        <div class="prod-body">
+          <h3>شاش ولاصق طبي</h3>
+          <p>طقم إسعافات أولية منزلي</p>
+          <div class="prod-foot"><span class="prod-price">30 ج.م</span><a href="https://wa.me/201062276534" target="_blank" class="prod-btn">اطلب الآن</a></div>
+        </div>
+      </div>
+      <div class="prod-card">
+        <div class="prod-thumb">💉</div>
+        <div class="prod-body">
+          <h3>محلول ملحي للأنف</h3>
+          <p>تنظيف وترطيب الأنف، 100 مل</p>
+          <div class="prod-foot"><span class="prod-price">25 ج.م</span><a href="https://wa.me/201062276534" target="_blank" class="prod-btn">اطلب الآن</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
   <div class="wrap about-grid">
     <div class="about-photo">
       <div class="tag"><b>6 سنوات</b>من الخبرة في خدمة الحي</div>
@@ -343,5 +434,14 @@
   </div>
 </footer>
 
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registered'))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+</script>
 </body>
 </html>
