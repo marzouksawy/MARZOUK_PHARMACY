@@ -1,4 +1,4 @@
-const CACHE_NAME = 'marzouk-pharmacy-v1';
+const CACHE_NAME = 'marzouk-pharmacy-v2';
 const ASSETS = [
   '/MARZOUK_PHARMACY/',
   '/MARZOUK_PHARMACY/index.html',
@@ -23,6 +23,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });
