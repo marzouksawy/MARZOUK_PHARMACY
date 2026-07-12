@@ -640,6 +640,274 @@
       "alternatives": [
         "p031"
       ]
+    },
+    {
+      "id": "p034",
+      "category": "drugs",
+      "trade_name": "كولدريكس",
+      "active_ingredient": "باراسيتامول + فينيليفرين + كافيين",
+      "company": "GSK",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "لتخفيف أعراض البرد والإنفلونزا (سيلان الأنف، الصداع، الحرارة)، علبة 12 كيس",
+      "warnings": "يُحذر لمرضى ضغط الدم المرتفع والقلب. يسبب أرق إذا أُخذ ليلًا لاحتوائه على كافيين.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Coldrex",
+        "كولدريكس"
+      ],
+      "alternatives": [
+        "p035",
+        "p036"
+      ]
+    },
+    {
+      "id": "p035",
+      "category": "drugs",
+      "trade_name": "كومتركس",
+      "active_ingredient": "باراسيتامول + كلورفينيرامين + فينيليفرين",
+      "company": "GSK",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مضاد لأعراض البرد الشامل مع مضاد للحساسية، علبة 20 قرص",
+      "warnings": "يسبب النعاس. يُحذر لمرضى ضغط الدم والقلب.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Comtrex",
+        "كومتركس"
+      ],
+      "alternatives": [
+        "p034",
+        "p036"
+      ]
+    },
+    {
+      "id": "p036",
+      "category": "drugs",
+      "trade_name": "كونجستال",
+      "active_ingredient": "باراسيتامول + كلورفينيرامين + فينيليفرين",
+      "company": "Sigma Pharm",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "لعلاج أعراض البرد والزكام واحتقان الأنف، علبة 20 قرص",
+      "warnings": "يسبب النعاس. يُحذر لمرضى ضغط الدم والقلب والسكر.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Congestal",
+        "كونجستال"
+      ],
+      "alternatives": [
+        "p034",
+        "p035"
+      ]
+    },
+    {
+      "id": "p037",
+      "category": "drugs",
+      "trade_name": "فيرفكس",
+      "active_ingredient": "باراسيتامول + فينيليفرين",
+      "company": "Sanofi",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "أكياس فوارة لعلاج أعراض البرد والإنفلونزا، علبة 8 أكياس",
+      "warnings": "يُحذر لمرضى ضغط الدم المرتفع.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Fervex",
+        "فيرفكس"
+      ],
+      "alternatives": [
+        "p034"
+      ]
+    },
+    {
+      "id": "p038",
+      "category": "drugs",
+      "trade_name": "أكتيفيد",
+      "active_ingredient": "سودوإيفيدرين + تريبروليدين",
+      "company": "GSK",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "لعلاج احتقان الأنف وأعراض الحساسية المصاحبة للبرد، شراب 60 مل",
+      "warnings": "يُحذر لمرضى ضغط الدم المرتفع والقلب والغدة الدرقية.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Actifed",
+        "اكتيفيد"
+      ],
+      "alternatives": []
+    },
+    {
+      "id": "p039",
+      "category": "drugs",
+      "trade_name": "بروسبان",
+      "active_ingredient": "مستخلص أوراق اللبلاب",
+      "company": "Engelhard",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "شراب طبيعي طارد للبلغم لعلاج السعال، عبوة 100 مل",
+      "warnings": "آمن نسبيًا للأطفال، لكن يُفضّل استشارة الصيدلي لتحديد الجرعة حسب العمر.",
+      "general_dosage_note": "الجرعة حسب عمر الطفل أو البالغ ونصيحة الصيدلي.",
+      "keywords": [
+        "Prospan",
+        "بروسبان"
+      ],
+      "alternatives": [
+        "p040"
+      ]
+    },
+    {
+      "id": "p040",
+      "category": "drugs",
+      "trade_name": "أمبروليت",
+      "active_ingredient": "أمبروكسول",
+      "company": "Amoun",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "طارد للبلغم لعلاج السعال المصحوب ببلغم، شراب 100 مل",
+      "warnings": "يُحذر لمرضى القرحة المعدية الحادة.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Ambrolite",
+        "امبروليت"
+      ],
+      "alternatives": [
+        "p039",
+        "p041"
+      ]
+    },
+    {
+      "id": "p041",
+      "category": "drugs",
+      "trade_name": "بيزولفون",
+      "active_ingredient": "بروم هيكسين",
+      "company": "Sanofi",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "طارد للبلغم ومذيب للإفرازات المخاطية، شراب 100 مل",
+      "warnings": "يُحذر لمرضى القرحة المعدية.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Bisolvon",
+        "بيزولفون"
+      ],
+      "alternatives": [
+        "p040"
+      ]
+    },
+    {
+      "id": "p042",
+      "category": "drugs",
+      "trade_name": "توسيلار",
+      "active_ingredient": "مواد طبيعية مركّبة (زعتر وأعشاب)",
+      "company": "Pharco",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "شراب طبيعي لتهدئة السعال الجاف والمتهيج، عبوة 120 مل",
+      "warnings": "منتج عشبي، يُحذر لمرضى الحساسية من مكوناته.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Tussilar",
+        "توسيلار"
+      ],
+      "alternatives": []
+    },
+    {
+      "id": "p043",
+      "category": "drugs",
+      "trade_name": "برونكوليتين",
+      "active_ingredient": "جلوسين + إيفيدرين",
+      "company": "Sedico",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "شراب لعلاج السعال الجاف والمتشنج، عبوة 125 مل",
+      "warnings": "يُحذر لمرضى القلب وضغط الدم المرتفع. يسبب نعاس خفيف.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Broncholitin",
+        "برونكوليتين"
+      ],
+      "alternatives": []
+    },
+    {
+      "id": "p044",
+      "category": "drugs",
+      "trade_name": "ريناثيول",
+      "active_ingredient": "كاربوسيستين",
+      "company": "Sanofi",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "شراب لتسييل وطرد المخاط والبلغم، عبوة 125 مل",
+      "warnings": "يُحذر لمرضى القرحة المعدية النشطة.",
+      "general_dosage_note": "الجرعة حسب العمر ونصيحة الصيدلي.",
+      "keywords": [
+        "Rhinathiol",
+        "ريناثيول"
+      ],
+      "alternatives": [
+        "p040",
+        "p041"
+      ]
+    },
+    {
+      "id": "p045",
+      "category": "drugs",
+      "trade_name": "أوتريفين",
+      "active_ingredient": "زايلوميتازولين",
+      "company": "GSK",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "بخاخ أنف لعلاج احتقان الأنف بسرعة، عبوة 10 مل",
+      "warnings": "لا يستخدم لأكثر من 5-7 أيام متواصلة لتجنب الاحتقان الارتدادي.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Otrivin",
+        "اوتريفين"
+      ],
+      "alternatives": []
+    },
+    {
+      "id": "p046",
+      "category": "drugs",
+      "trade_name": "فيكس فيبورب",
+      "active_ingredient": "مواد بخارية (كافور، منثول، أوكالبتوس)",
+      "company": "P&G",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مرهم يُدهن على الصدر والظهر لتخفيف احتقان الصدر، عبوة 50 جم",
+      "warnings": "للاستخدام الخارجي فقط، يُحذر من ملامسته للعين أو الأغشية المخاطية.",
+      "general_dosage_note": "",
+      "keywords": [
+        "Vicks VapoRub",
+        "فيكس"
+      ],
+      "alternatives": []
     }
   ]
 }
