@@ -251,6 +251,7 @@
     <nav><ul>
       <li><a href="#services">خدماتنا</a></li>
       <li><a href="#products">منتجاتنا</a></li>
+      <li><a href="#tools">خدمات سريعة</a></li>
       <li><a href="#about">عن الصيدلية</a></li>
       <li><a href="#hours">المواعيد</a></li>
       <li><a href="#contact">تواصل معنا</a></li>
@@ -349,6 +350,28 @@
   </div>
 </section>
 
+<section class="section" id="tools" style="background:var(--paper);">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">خدمات سريعة</span>
+      <h2>محتاج روشتة تتصرف، أو سؤال يتحل؟</h2>
+      <p>ارفع صورة روشتتك أو اسأل الصيدلي مباشرة، من غير ما تسيب البيت.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;">
+      <div class="svc-card">
+        <div class="svc-icon">📄</div>
+        <h3 style="margin-bottom:14px;">رفع الروشتة</h3>
+        <div id="prescription-upload"></div>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon">💬</div>
+        <h3 style="margin-bottom:14px;">اسأل الصيدلي</h3>
+        <div id="ask-pharmacist"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section about" id="about">
   <div class="wrap about-grid">
     <div class="about-photo">
@@ -422,6 +445,7 @@
   </div>
 </footer>
 
+<script src="patient-tools.js"></script>
 <script src="search.js"></script>
 <script src="home-widgets.js"></script>
 <script>
@@ -430,6 +454,8 @@
   PharmacyHome.renderDailyTip('#daily-tip');
   PharmacyHome.renderMedicineOfDay('#medicine-of-day');
   PharmacyHome.renderEmergencyNumbers('#emergency-numbers');
+  PatientTools.initPrescriptionUpload('#prescription-upload');
+  PatientTools.initAskPharmacist('#ask-pharmacist');
 
   fetch('products.json').then(r => r.json()).then(data => {
     PharmacyHome.renderCategoryFilters('#category-filters', data.categories, (catId) => {
