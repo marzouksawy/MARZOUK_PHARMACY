@@ -1,11 +1,16 @@
 /**
- * search.js — منطق البحث والتصفية لصفحة المنتجات (v1.3)
+ * search.js — منطق البحث والتصفية لصفحة المنتجات (v1.4)
  * استخدمه مع products.json الموجود في نفس المجلد.
+ *
+ * جديد في هذا الإصدار:
+ *   - دعم حقل "keywords" اختياري لكل منتج (مصفوفة كلمات بديلة)
+ *     يسمح بالبحث عن اسم المنتج الإنجليزي بالعربي، مثال:
+ *     "trade_name": "Limitless Man Max", "keywords": ["ليمتلس", "ليمتلس مان ماكس"]
  *
  * دمجه في صفحة المنتجات الحالية:
  *   <script src="search.js"></script>
  *   ...
- *   PharmacySearch.init('#search-input', '#products-grid');
+ *   PharmacySearch.init('#search-input', '#products-grid', '#category-filter');
  */
 const PharmacySearch = (function () {
   let allProducts = [];
@@ -26,10 +31,14 @@ const PharmacySearch = (function () {
   function matches(product, query) {
     const q = normalize(query);
     if (!q) return true;
+
+    const keywords = Array.isArray(product.keywords) ? product.keywords : [];
+
     return (
       normalize(product.trade_name).includes(q) ||
       normalize(product.active_ingredient).includes(q) ||
-      normalize(product.company).includes(q)
+      normalize(product.company).includes(q) ||
+      keywords.some((k) => normalize(k).includes(q))
     );
   }
 
@@ -89,7 +98,13 @@ const PharmacySearch = (function () {
       renderResults(grid, search(query, categoryId));
     }
 
-    if (input) input.addEventListener("input", runSearch);
+    let debounceTimer;
+    if (input) {
+      input.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(runSearch, 150);
+      });
+    }
     if (catSelect) catSelect.addEventListener("change", runSearch);
 
     runSearch(); // عرض كل المنتجات أول ما الصفحة تفتح
