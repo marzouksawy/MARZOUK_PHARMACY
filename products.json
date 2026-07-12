@@ -1,8 +1,23 @@
 {
   "categories": [
-    { "id": "drugs", "name": "أدوية", "icon": "💊", "color": "#0F4C4F" },
-    { "id": "supplements", "name": "فيتامينات ومكملات", "icon": "🌿", "color": "#D98C4A" },
-    { "id": "care", "name": "عناية ومستلزمات طبية", "icon": "🩹", "color": "#7A6A8A" }
+    {
+      "id": "drugs",
+      "name": "أدوية",
+      "icon": "💊",
+      "color": "#0F4C4F"
+    },
+    {
+      "id": "supplements",
+      "name": "فيتامينات ومكملات",
+      "icon": "🌿",
+      "color": "#D98C4A"
+    },
+    {
+      "id": "care",
+      "name": "عناية ومستلزمات طبية",
+      "icon": "🩹",
+      "color": "#7A6A8A"
+    }
   ],
   "products": [
     {
@@ -108,7 +123,11 @@
       "short_uses": "دعم كفاءة الأعصاب وعلاج الألم العصبي، 30 قرص",
       "warnings": "استشر الصيدلي عند التداخل مع أدوية أخرى.",
       "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
-      "alternatives": ["p008", "p009", "p016"]
+      "alternatives": [
+        "p008",
+        "p009",
+        "p016"
+      ]
     },
     {
       "id": "p008",
@@ -123,7 +142,11 @@
       "short_uses": "لتقوية الجهاز العصبي، 30 قرص",
       "warnings": "",
       "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
-      "alternatives": ["p007", "p009", "p016"]
+      "alternatives": [
+        "p007",
+        "p009",
+        "p016"
+      ]
     },
     {
       "id": "p009",
@@ -138,7 +161,10 @@
       "short_uses": "علاج آلام الأعصاب والتهاب الأعصاب الطرفية، 20 قرص",
       "warnings": "",
       "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
-      "alternatives": ["p007", "p008"]
+      "alternatives": [
+        "p007",
+        "p008"
+      ]
     },
     {
       "id": "p010",
@@ -153,8 +179,15 @@
       "short_uses": "دعم الطاقة والمناعة للرجال، 30 قرص",
       "warnings": "",
       "general_dosage_note": "",
-      "keywords": ["ليمتلس", "ليمتلس مان ماكس", "ليميتلس"],
-      "alternatives": ["p017", "p018"]
+      "keywords": [
+        "ليمتلس",
+        "ليمتلس مان ماكس",
+        "ليميتلس"
+      ],
+      "alternatives": [
+        "p017",
+        "p018"
+      ]
     },
     {
       "id": "p011",
@@ -169,7 +202,10 @@
       "short_uses": "فيتامين ب12 سريع الذوبان لعلاج آلام الأعصاب، 30 فيلم",
       "warnings": "",
       "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
-      "alternatives": ["p008", "p009"]
+      "alternatives": [
+        "p008",
+        "p009"
+      ]
     },
     {
       "id": "p012",
@@ -184,7 +220,12 @@
       "short_uses": "دعم صحة القلب والمخ والمفاصل، 30 كبسولة",
       "warnings": "يُستخدم بحذر لمرضى اضطرابات التخثر.",
       "general_dosage_note": "",
-      "keywords": ["ليمتلس اوميجا", "ليمتلس اوميغا 3", "اوميجا 3", "اوميغا 3"],
+      "keywords": [
+        "ليمتلس اوميجا",
+        "ليمتلس اوميغا 3",
+        "اوميجا 3",
+        "اوميغا 3"
+      ],
       "alternatives": []
     },
     {
@@ -215,8 +256,14 @@
       "short_uses": "دعم الجهاز العصبي وتعزيز الطاقة، 30 قرص",
       "warnings": "",
       "general_dosage_note": "",
-      "keywords": ["نيوتريفيل", "نيوتري فيل", "بي كومبلكس"],
-      "alternatives": ["p015"]
+      "keywords": [
+        "نيوتريفيل",
+        "نيوتري فيل",
+        "بي كومبلكس"
+      ],
+      "alternatives": [
+        "p015"
+      ]
     },
     {
       "id": "p015",
@@ -231,8 +278,14 @@
       "short_uses": "تركيبة طبيعية لإنتاج الطاقة وصحة المخ، 60 قرص",
       "warnings": "",
       "general_dosage_note": "",
-      "keywords": ["اورجانيك نيشن", "أورجانيك نيشن", "بي كومبلكس"],
-      "alternatives": ["p014"]
+      "keywords": [
+        "اورجانيك نيشن",
+        "أورجانيك نيشن",
+        "بي كومبلكس"
+      ],
+      "alternatives": [
+        "p014"
+      ]
     },
     {
       "id": "p016",
@@ -247,7 +300,10 @@
       "short_uses": "تركيز عالي لعلاج الألم العصبي الشديد، 30 قرص",
       "warnings": "",
       "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
-      "alternatives": ["p007", "p008"]
+      "alternatives": [
+        "p007",
+        "p008"
+      ]
     },
     {
       "id": "p017",
@@ -262,7 +318,10 @@
       "short_uses": "دعم الصحة العامة للرجال، 30 قرص",
       "warnings": "",
       "general_dosage_note": "",
-      "alternatives": ["p010", "p018"]
+      "alternatives": [
+        "p010",
+        "p018"
+      ]
     },
     {
       "id": "p018",
@@ -277,8 +336,310 @@
       "short_uses": "أكثر من 30 عنصر غذائي لصحة الرجال فوق 50، 30 قرص",
       "warnings": "",
       "general_dosage_note": "",
-      "keywords": ["ويل مان", "ويلمان"],
-      "alternatives": ["p010", "p017"]
+      "keywords": [
+        "ويل مان",
+        "ويلمان"
+      ],
+      "alternatives": [
+        "p010",
+        "p017"
+      ]
+    },
+    {
+      "id": "p019",
+      "category": "drugs",
+      "trade_name": "بانادول",
+      "active_ingredient": "باراسيتامول 500mg",
+      "company": "GSK",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مسكّن للألم الخفيف والمتوسط، وخافض للحرارة، علبة 24 قرص",
+      "warnings": "لا يستخدم مع أدوية أخرى تحتوي على باراسيتامول. يُحذر عند وجود مشاكل بالكبد.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — الجرعة الدقيقة حسب النشرة الداخلية أو توجيه الطبيب/الصيدلي.",
+      "keywords": [
+        "Panadol",
+        "بانادول"
+      ],
+      "alternatives": [
+        "p001",
+        "p020"
+      ]
+    },
+    {
+      "id": "p020",
+      "category": "drugs",
+      "trade_name": "بانادول اكسترا",
+      "active_ingredient": "باراسيتامول + كافيين",
+      "company": "GSK",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مسكّن معزّز بالكافيين لآلام الصداع والشقيقة، علبة 24 قرص",
+      "warnings": "يُحذر من الإفراط في تناول الكافيين مع مرضى القلب وارتفاع ضغط الدم.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Panadol Extra",
+        "بانادول اكسترا"
+      ],
+      "alternatives": [
+        "p019"
+      ]
+    },
+    {
+      "id": "p021",
+      "category": "drugs",
+      "trade_name": "أدول",
+      "active_ingredient": "باراسيتامول 500mg",
+      "company": "EIPICO",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مسكّن للألم وخافض للحرارة، علبة 20 قرص",
+      "warnings": "لا يستخدم مع أدوية أخرى تحتوي على باراسيتامول.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Adol",
+        "ادول"
+      ],
+      "alternatives": [
+        "p001",
+        "p019"
+      ]
+    },
+    {
+      "id": "p022",
+      "category": "drugs",
+      "trade_name": "ريفو",
+      "active_ingredient": "باراسيتامول 500mg",
+      "company": "Marcyrl",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مسكّن للألم وخافض للحرارة، علبة 20 قرص",
+      "warnings": "لا يستخدم مع أدوية أخرى تحتوي على باراسيتامول.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Rivo",
+        "ريفو"
+      ],
+      "alternatives": [
+        "p001",
+        "p019",
+        "p021"
+      ]
+    },
+    {
+      "id": "p023",
+      "category": "drugs",
+      "trade_name": "بروفين",
+      "active_ingredient": "أيبوبروفين 400mg",
+      "company": "Abbott",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مضاد للالتهاب ومسكّن للألم وخافض للحرارة، علبة 30 قرص",
+      "warnings": "يُحذر لمرضى القرحة والمعدة، ويفضّل تناوله بعد الأكل. غير مناسب في الحمل بدون استشارة طبيب.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Brufen",
+        "بروفين"
+      ],
+      "alternatives": [
+        "p024"
+      ]
+    },
+    {
+      "id": "p024",
+      "category": "drugs",
+      "trade_name": "كتافلام",
+      "active_ingredient": "ديكلوفيناك بوتاسيوم 50mg",
+      "company": "Novartis",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مضاد للالتهاب ومسكّن قوي لآلام العضلات والمفاصل، علبة 20 قرص",
+      "warnings": "يُحذر لمرضى القرحة والقلب والكلى. لا يستخدم لفترات طويلة بدون استشارة طبيب.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Cataflam",
+        "كتافلام"
+      ],
+      "alternatives": [
+        "p023",
+        "p025"
+      ]
+    },
+    {
+      "id": "p025",
+      "category": "drugs",
+      "trade_name": "فولتارين",
+      "active_ingredient": "ديكلوفيناك صوديوم 50mg",
+      "company": "Novartis",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مضاد للالتهاب لآلام الظهر والمفاصل والروماتيزم، علبة 20 قرص",
+      "warnings": "يُحذر لمرضى القرحة والقلب والكلى.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Voltaren",
+        "فولتارين"
+      ],
+      "alternatives": [
+        "p024"
+      ]
+    },
+    {
+      "id": "p026",
+      "category": "drugs",
+      "trade_name": "أسبوسيد",
+      "active_ingredient": "أسبرين (حمض أسيتيل الساليسيليك) 500mg",
+      "company": "Sigma Pharm",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مسكّن وخافض حرارة ومضاد للالتهاب، علبة 20 قرص",
+      "warnings": "لا يُعطى للأطفال تحت 16 سنة. يُحذر لمرضى القرحة واضطرابات التخثر.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Aspocid",
+        "أسبوسيد"
+      ],
+      "alternatives": []
+    },
+    {
+      "id": "p027",
+      "category": "drugs",
+      "trade_name": "أوكاجيزيك",
+      "active_ingredient": "ديكلوفيناك + باراسيتامول",
+      "company": "Amoun",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مسكّن قوي مركّب لآلام الأسنان والعضلات، علبة 20 قرص",
+      "warnings": "يُحذر لمرضى القرحة والكبد. لا يستخدم لفترات طويلة.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Okagesic",
+        "اوكاجيزيك"
+      ],
+      "alternatives": [
+        "p024"
+      ]
+    },
+    {
+      "id": "p028",
+      "category": "drugs",
+      "trade_name": "ميجرين",
+      "active_ingredient": "إرجوتامين + كافيين",
+      "company": "Amoun",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "لعلاج نوبات الصداع النصفي (الشقيقة)، علبة 10 أقراص",
+      "warnings": "يُمنع استخدامه لمرضى القلب وضغط الدم المرتفع والحوامل.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — لا يستخدم إلا بمعرفة الطبيب.",
+      "keywords": [
+        "Migranin",
+        "ميجرين"
+      ],
+      "alternatives": []
+    },
+    {
+      "id": "p029",
+      "category": "drugs",
+      "trade_name": "سيتال",
+      "active_ingredient": "باراسيتامول 500mg",
+      "company": "Al Amriya",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مسكّن للألم وخافض للحرارة، علبة 20 قرص",
+      "warnings": "لا يستخدم مع أدوية أخرى تحتوي على باراسيتامول.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Cetal",
+        "سيتال"
+      ],
+      "alternatives": [
+        "p001",
+        "p019",
+        "p021",
+        "p022"
+      ]
+    },
+    {
+      "id": "p030",
+      "category": "drugs",
+      "trade_name": "بنادول نايت",
+      "active_ingredient": "باراسيتامول + ديفينهيدرامين",
+      "company": "GSK",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "مسكّن مسائي يساعد على النوم مع تسكين الألم، علبة 10 أقراص",
+      "warnings": "يسبب النعاس، يُحذر من القيادة بعد تناوله.",
+      "general_dosage_note": "معلومة تثقيفية عامة فقط — راجع النشرة الداخلية.",
+      "keywords": [
+        "Panadol Night",
+        "بنادول نايت"
+      ],
+      "alternatives": []
+    },
+    {
+      "id": "p031",
+      "category": "drugs",
+      "trade_name": "بروفين أطفال شراب",
+      "active_ingredient": "أيبوبروفين 100mg/5ml",
+      "company": "Abbott",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "خافض حرارة ومسكّن للأطفال، عبوة 100 مل",
+      "warnings": "الجرعة حسب وزن الطفل، لا يُعطى تحت 3 أشهر إلا بإشراف طبي.",
+      "general_dosage_note": "الجرعة حسب عمر ووزن الطفل ونصيحة الصيدلي أو الطبيب.",
+      "keywords": [
+        "Brufen Syrup",
+        "بروفين شراب اطفال"
+      ],
+      "alternatives": [
+        "p032"
+      ]
+    },
+    {
+      "id": "p032",
+      "category": "drugs",
+      "trade_name": "بانادول أطفال شراب",
+      "active_ingredient": "باراسيتامول 120mg/5ml",
+      "company": "GSK",
+      "price": 0,
+      "currency": "EGP",
+      "available": false,
+      "image": "",
+      "short_uses": "خافض حرارة ومسكّن للأطفال، عبوة 60 مل",
+      "warnings": "الجرعة حسب وزن الطفل.",
+      "general_dosage_note": "الجرعة حسب عمر ووزن الطفل ونصيحة الصيدلي أو الطبيب.",
+      "keywords": [
+        "Panadol Baby",
+        "بانادول أطفال"
+      ],
+      "alternatives": [
+        "p031"
+      ]
     }
   ]
 }
