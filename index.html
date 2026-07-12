@@ -83,14 +83,13 @@
   .btn{
     padding:14px 28px;border-radius:999px;font-weight:600;font-size:15px;
     display:inline-flex;align-items:center;gap:8px;transition:transform .15s ease, box-shadow .15s ease;
-    border:none;cursor:pointer;font-family:inherit;
   }
   .btn-primary{background:var(--petrol);color:#fff;box-shadow:0 10px 24px rgba(15,76,79,0.28);}
   .btn-primary:hover{transform:translateY(-2px);}
-  .btn-ghost{border:1.5px solid var(--line);color:var(--petrol-deep);background:transparent;}
+  .btn-ghost{border:1.5px solid var(--line);color:var(--petrol-deep);}
   .btn-ghost:hover{border-color:var(--petrol);}
 
-  /* Rx card */
+  /* Rx card — signature element: prescription-pad styled info card */
   .rx-card{
     background:var(--paper);
     border-radius:18px;
@@ -141,21 +140,8 @@
   .svc-card h3{font-size:16.5px;font-weight:700;margin-bottom:8px;color:var(--petrol-deep);}
   .svc-card p{font-size:13.8px;color:rgba(14,42,46,0.65);}
 
-  /* Products (dynamic, via search.js) */
+  /* Products */
   .products{background:var(--cream);}
-  .search-bar{
-    display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;
-  }
-  .search-bar input[type="text"]{
-    flex:1;min-width:220px;
-    padding:14px 20px;border-radius:999px;border:1.5px solid var(--line);
-    font-family:inherit;font-size:15px;background:var(--paper);color:var(--ink);
-  }
-  .search-bar input[type="text"]:focus{outline:none;border-color:var(--petrol);}
-  .search-bar select{
-    padding:14px 20px;border-radius:999px;border:1.5px solid var(--line);
-    font-family:inherit;font-size:15px;background:var(--paper);color:var(--ink);
-  }
   .prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
   .prod-card{
     background:var(--paper);border-radius:16px;overflow:hidden;
@@ -175,9 +161,17 @@
     background:var(--petrol);color:#fff;font-size:13px;font-weight:600;
     padding:9px 16px;border-radius:999px;
   }
-  .no-results{grid-column:1/-1;text-align:center;color:rgba(14,42,46,0.55);padding:40px 0;}
+  .search-box{margin-bottom:24px;}
+  .search-box input{
+    width:100%;padding:14px 18px;border-radius:999px;border:1px solid var(--line);
+    font-family:'IBM Plex Sans Arabic', sans-serif;font-size:15px;background:var(--paper);
+    color:var(--ink);
+  }
+  .search-box input::placeholder{color:rgba(14,42,46,0.45);}
+  .no-results{color:rgba(14,42,46,0.55);font-size:14.5px;padding:20px 0;}
 
   /* About */
+  .about{}
   .about-grid{display:grid;grid-template-columns:0.85fr 1.15fr;gap:56px;align-items:center;}
   .about-photo{
     aspect-ratio:4/5;border-radius:20px;
@@ -241,9 +235,6 @@
     .hero h1{font-size:34px;}
     .about-photo{order:-1;}
   }
-  @media (max-width: 520px){
-    .prod-grid{grid-template-columns:1fr;}
-  }
 </style>
 </head>
 <body>
@@ -276,7 +267,7 @@
       <p>صيدلية د. مرزوق الصاوي تقدّم لك الأدوية والاستشارة الصيدلانية وتوصيل الطلبات بثقة وسرعة، بإشراف صيدلي مرخّص على مدار اليوم.</p>
       <div class="btn-row">
         <a href="https://wa.me/201062276534" target="_blank" class="btn btn-primary">احجز توصيل طلبك</a>
-        <a href="#products" class="btn btn-ghost">تصفح المنتجات</a>
+        <a href="#services" class="btn btn-ghost">تصفح الخدمات</a>
       </div>
     </div>
     <div class="rx-card">
@@ -286,7 +277,7 @@
           <div class="rx-mark">℞ روشتة</div>
         </div>
       </div>
-      <div class="rx-line"><span class="k">الحالة</span><span class="v rx-open">مفتوحة الآن</span></div>
+      <div class="rx-line"><span class="k">الحالة</span><span class="v rx-open" id="open-status">مفتوحة الآن</span></div>
       <div class="rx-line"><span class="k">المسؤول</span><span class="v">د. مرزوق الصاوي</span></div>
       <div class="rx-line"><span class="k">التوصيل</span><span class="v">خلال 30 دقيقة</span></div>
       <div class="rx-line"><span class="k">الاستشارة</span><span class="v">مجانية للعملاء</span></div>
@@ -327,31 +318,38 @@
   </div>
 </section>
 
-<section class="section products" id="products">
+<section class="section" style="padding:0 0 84px;">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">منتجاتنا</span>
-      <h2>ابحث عن دوائك أو منتجك المفضل</h2>
-      <p>ابحث بالاسم التجاري أو المادة الفعالة، أو صفّي حسب الفئة. الصور التوضيحية، والمنتج الفعلي قد يختلف شكله.</p>
-    </div>
-
-    <div class="search-bar">
-      <input type="text" id="search-input" placeholder="ابحث عن اسم الدواء أو المادة الفعالة...">
-      <select id="category-filter">
-        <option value="all">كل الفئات</option>
-        <option value="drugs">💊 أدوية</option>
-        <option value="supplements">🌿 فيتامينات ومكملات</option>
-        <option value="care">🩹 عناية ومستلزمات طبية</option>
-      </select>
-    </div>
-
-    <div class="prod-grid" id="products-grid">
-      <!-- يتم حقن المنتجات هنا تلقائيًا عبر search.js -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;">
+      <div class="svc-card" style="background:var(--paper);">
+        <div class="svc-icon" style="background:var(--amber);">💡</div>
+        <h3>نصيحة اليوم</h3>
+        <p id="daily-tip">جاري التحميل...</p>
+      </div>
+      <div class="svc-card" style="background:var(--paper);">
+        <div class="svc-icon">📅</div>
+        <div id="medicine-of-day"><p>جاري التحميل...</p></div>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="section about" id="about" style="background:var(--paper);">
+<section class="section products" id="products">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">منتجاتنا</span>
+      <h2>كل منتجاتنا في مكان واحد</h2>
+      <p>ابحث بالاسم التجاري أو المادة الفعالة، أو تصفح كل المنتجات المتاحة الآن في الصيدلية وللتوصيل.</p>
+    </div>
+    <div id="category-filters" style="margin-bottom:16px;"></div>
+    <div class="search-box">
+      <input id="search-input" type="text" placeholder="ابحث بالاسم التجاري أو المادة الفعالة...">
+    </div>
+    <div class="prod-grid" id="products-grid"></div>
+  </div>
+</section>
+
+<section class="section about" id="about">
   <div class="wrap about-grid">
     <div class="about-photo">
       <div class="tag"><b>6 سنوات</b>من الخبرة في خدمة الحي</div>
@@ -378,6 +376,8 @@
       <div class="hours-list">
         <div class="hours-row today"><span class="day">يوميًا (كل أيام الأسبوع)</span><span class="time">8:00 ص – 1:00 ص</span></div>
       </div>
+      <h2 style="margin-top:32px;">أرقام الطوارئ</h2>
+      <div class="contact-list" id="emergency-numbers"></div>
     </div>
     <div id="contact">
       <h2>تواصل معنا</h2>
@@ -395,6 +395,11 @@
           <span class="ic">🟢</span>
           <div><div class="t">واتساب</div><div class="d"><a href="https://wa.me/201062276534" target="_blank">01062276534</a></div></div>
         </div>
+      </div>
+      <div style="margin-top:20px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);">
+        <iframe
+          src="https://www.google.com/maps?q=قرية+مؤنسة+مركز+أشمون+المنوفية&output=embed"
+          width="100%" height="220" style="border:0;display:block;" loading="lazy"></iframe>
       </div>
     </div>
   </div>
@@ -418,16 +423,28 @@
 </footer>
 
 <script src="search.js"></script>
+<script src="home-widgets.js"></script>
 <script>
-  PharmacySearch.init('#search-input', '#products-grid', '#category-filter');
+  PharmacySearch.init('#search-input', '#products-grid');
+  PharmacyHome.renderOpenStatus('#open-status');
+  PharmacyHome.renderDailyTip('#daily-tip');
+  PharmacyHome.renderMedicineOfDay('#medicine-of-day');
+  PharmacyHome.renderEmergencyNumbers('#emergency-numbers');
 
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('SW registered'))
-        .catch(err => console.log('SW error:', err));
+  fetch('products.json').then(r => r.json()).then(data => {
+    PharmacyHome.renderCategoryFilters('#category-filters', data.categories, (catId) => {
+      PharmacySearch.setCategory(catId);
     });
-  }
+  });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registered'))
+      .catch(err => console.log('SW error:', err));
+  });
+}
 </script>
 </body>
 </html>
