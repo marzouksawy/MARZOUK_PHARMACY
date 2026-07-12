@@ -1,16 +1,11 @@
 /**
- * search.js — منطق البحث والتصفية لصفحة المنتجات (v1.4)
+ * search.js — منطق البحث والتصفية لصفحة المنتجات (v1.3)
  * استخدمه مع products.json الموجود في نفس المجلد.
- *
- * جديد في هذا الإصدار:
- *   - دعم حقل "keywords" اختياري لكل منتج (مصفوفة كلمات بديلة)
- *     يسمح بالبحث عن اسم المنتج الإنجليزي بالعربي، مثال:
- *     "trade_name": "Limitless Man Max", "keywords": ["ليمتلس", "ليمتلس مان ماكس"]
  *
  * دمجه في صفحة المنتجات الحالية:
  *   <script src="search.js"></script>
  *   ...
- *   PharmacySearch.init('#search-input', '#products-grid', '#category-filter');
+ *   PharmacySearch.init('#search-input', '#products-grid');
  */
 const PharmacySearch = (function () {
   let allProducts = [];
@@ -31,22 +26,11 @@ const PharmacySearch = (function () {
   function matches(product, query) {
     const q = normalize(query);
     if (!q) return true;
-
-    const keywords = Array.isArray(product.keywords) ? product.keywords : [];
-
     return (
       normalize(product.trade_name).includes(q) ||
       normalize(product.active_ingredient).includes(q) ||
-      normalize(product.company).includes(q) ||
-      keywords.some((k) => normalize(k).includes(q))
+      normalize(product.company).includes(q)
     );
-  }
-
-  function search(query, categoryId) {
-    return allProducts.filter((p) => {
-      const inCategory = !categoryId || categoryId === "all" || p.category === categoryId;
-      return inCategory && matches(p, query);
-    });
   }
 
   function getAlternatives(productId) {
@@ -62,8 +46,14 @@ const PharmacySearch = (function () {
     const thumb = product.image
       ? `<img src="${product.image}" alt="${product.trade_name}" style="width:100%;height:100%;object-fit:contain;padding:6px;">`
       : cat.icon || "💊";
+    const favActive = typeof PatientTools !== 'undefined' && PatientTools.isFavorite(product.id);
     return `
-      <div class="prod-card">
+      <div class="prod-card" style="position:relative;">
+        <button class="fav-btn" data-fav-id="${product.id}"
+          style="position:absolute;top:10px;left:10px;z-index:2;border:none;background:rgba(255,255,255,0.9);
+          width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer;">
+          ${favActive ? "❤️" : "🤍"}
+        </button>
         <div class="prod-thumb"${product.image ? ' style="background:#f5f5f5;"' : ""}>${thumb}</div>
         <div class="prod-body">
           <h3>${product.trade_name}</h3>
@@ -76,10 +66,36 @@ const PharmacySearch = (function () {
       </div>`;
   }
 
+  let currentCategory = "all";
+  let favoritesOnly = false;
+
+  function search(query, categoryId) {
+    return allProducts.filter((p) => {
+      const inCategory = !categoryId || categoryId === "all" || p.category === categoryId;
+      const inFavorites =
+        !favoritesOnly || (typeof PatientTools !== 'undefined' && PatientTools.isFavorite(p.id));
+      return inCategory && inFavorites && matches(p, query);
+    });
+  }
+
+  function bindFavButtons(grid) {
+    grid.querySelectorAll(".fav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.favId;
+        if (typeof PatientTools !== 'undefined') {
+          const nowActive = PatientTools.toggleFavorite(id);
+          btn.textContent = nowActive ? "❤️" : "🤍";
+          if (favoritesOnly && !nowActive) window.__pharmacyRunSearch && window.__pharmacyRunSearch();
+        }
+      });
+    });
+  }
+
   function renderResults(container, results) {
     container.innerHTML = results.length
       ? results.map(renderCard).join("")
       : `<p class="no-results">لا توجد منتجات مطابقة لبحثك.</p>`;
+    bindFavButtons(container);
   }
 
   async function init(inputSelector, gridSelector, categorySelector) {
@@ -94,21 +110,33 @@ const PharmacySearch = (function () {
 
     function runSearch() {
       const query = input ? input.value : "";
-      const categoryId = catSelect ? catSelect.value : "all";
+      const categoryId = catSelect ? catSelect.value : currentCategory;
       renderResults(grid, search(query, categoryId));
     }
 
-    let debounceTimer;
-    if (input) {
-      input.addEventListener("input", () => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(runSearch, 150);
-      });
-    }
+    if (input) input.addEventListener("input", runSearch);
     if (catSelect) catSelect.addEventListener("change", runSearch);
+
+    // يُستدعى من أزرار الفلتر في home-widgets.js
+    window.__pharmacyRunSearch = runSearch;
+    window.__pharmacySetCategory = function (catId) {
+      currentCategory = catId;
+      runSearch();
+    };
 
     runSearch(); // عرض كل المنتجات أول ما الصفحة تفتح
   }
 
-  return { init, search, getAlternatives, normalize };
+  return {
+    init,
+    search,
+    getAlternatives,
+    normalize,
+    getCategories: () => categories,
+    setCategory: (catId) => window.__pharmacySetCategory && window.__pharmacySetCategory(catId),
+    setFavoritesOnly: (val) => {
+      favoritesOnly = val;
+      window.__pharmacyRunSearch && window.__pharmacyRunSearch();
+    },
+  };
 })();
