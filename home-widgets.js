@@ -115,11 +115,95 @@ const PharmacyHome = (function () {
     });
   }
 
+  // ===== الوضع الليلي =====
+  function initDarkMode(toggleSelector) {
+    const btn = document.querySelector(toggleSelector);
+    const saved = localStorage.getItem("marzouk_theme");
+    if (saved === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+    updateToggleIcon(btn);
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      if (isDark) {
+        document.documentElement.removeAttribute("data-theme");
+        localStorage.setItem("marzouk_theme", "light");
+      } else {
+        document.documentElement.setAttribute("data-theme", "dark");
+        localStorage.setItem("marzouk_theme", "dark");
+      }
+      updateToggleIcon(btn);
+    });
+  }
+
+  function updateToggleIcon(btn) {
+    if (!btn) return;
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    btn.textContent = isDark ? "☀️" : "🌙";
+  }
+
+  // ===== شريط تنبيه التحديثات (بديل عملي بدون سيرفر) =====
+  async function renderUpdateBanner(selector, contentUrl) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    const res = await fetch(contentUrl || "content.json");
+    const data = await res.json();
+    const update = data.latest_update;
+    if (!update) return;
+    const seenId = localStorage.getItem("marzouk_seen_update");
+    if (seenId === update.id) return;
+
+    el.innerHTML = `
+      <div style="background:var(--amber);color:#fff;padding:12px 18px;display:flex;
+        align-items:center;justify-content:space-between;gap:12px;font-size:14px;">
+        <span>${update.message}</span>
+        <button id="dismiss-update-btn" style="background:rgba(255,255,255,0.25);border:none;
+          color:#fff;border-radius:999px;width:26px;height:26px;cursor:pointer;flex-shrink:0;">✕</button>
+      </div>
+    `;
+    el.querySelector("#dismiss-update-btn").addEventListener("click", () => {
+      localStorage.setItem("marzouk_seen_update", update.id);
+      el.innerHTML = "";
+    });
+  }
+
+  // ===== تفعيل إشعارات المتصفح (محلية فقط، بدون سيرفر Push) =====
+  function initNotificationOptIn(btnSelector) {
+    const btn = document.querySelector(btnSelector);
+    if (!btn || !("Notification" in window)) return;
+
+    function refreshLabel() {
+      btn.textContent =
+        Notification.permission === "granted" ? "🔔 الإشعارات مفعّلة" : "🔕 فعّل الإشعارات";
+    }
+    refreshLabel();
+
+    btn.addEventListener("click", async () => {
+      if (Notification.permission === "granted") {
+        new Notification("صيدلية د. مرزوق الصاوي", {
+          body: "الإشعارات شغالة بنجاح! هنبلغك بأي تحديث مهم.",
+        });
+        return;
+      }
+      const perm = await Notification.requestPermission();
+      refreshLabel();
+      if (perm === "granted") {
+        new Notification("صيدلية د. مرزوق الصاوي", {
+          body: "تم تفعيل الإشعارات بنجاح ✅",
+        });
+      }
+    });
+  }
+
   return {
     renderOpenStatus,
     renderDailyTip,
     renderMedicineOfDay,
     renderEmergencyNumbers,
     renderCategoryFilters,
+    initDarkMode,
+    renderUpdateBanner,
+    initNotificationOptIn,
   };
 })();
