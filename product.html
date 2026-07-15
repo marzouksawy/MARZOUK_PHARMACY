@@ -132,16 +132,13 @@
   <!-- المحتوى يتم حقنه هنا عبر product.js -->
 </div>
 
-<script>
+<script type="module">
+import { fetchProduct, fetchAllProducts, CATEGORIES } from "./firebase-config.js";
+
 const WHATSAPP_NUMBER = "201062276534"; // رقم واتساب صيدلية د. مرزوق الصاوي
 
 function getParam(name){
   return new URLSearchParams(window.location.search).get(name);
-}
-
-async function loadProducts(){
-  const res = await fetch('products.json');
-  return res.json();
 }
 
 function money(p){
@@ -226,10 +223,10 @@ function renderProduct(product, categories, allProducts){
 (async function init(){
   const id = getParam('id');
   if(!id){ renderNotFound(); return; }
-  const data = await loadProducts();
-  const product = data.products.find(p => p.id === id);
+  const product = await fetchProduct(id);
   if(!product){ renderNotFound(); return; }
-  renderProduct(product, data.categories, data.products);
+  const allProducts = await fetchAllProducts();
+  renderProduct(product, CATEGORIES, allProducts);
 })();
 </script>
 </body>
