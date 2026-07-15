@@ -471,9 +471,11 @@
 </footer>
 
 <script src="patient-tools.js"></script>
-<script src="search.js"></script>
-<script src="home-widgets.js"></script>
-<script>
+<script type="module" src="search.js"></script>
+<script type="module" src="home-widgets.js"></script>
+<script type="module">
+  import { CATEGORIES } from "./firebase-config.js";
+
   PharmacySearch.init('#search-input', '#products-grid');
   PharmacyHome.renderOpenStatus('#open-status');
   PharmacyHome.renderDailyTip('#daily-tip');
@@ -485,10 +487,8 @@
   PharmacyHome.renderUpdateBanner('#update-banner');
   PharmacyHome.initNotificationOptIn('#notif-opt-in');
 
-  fetch('products.json').then(r => r.json()).then(data => {
-    PharmacyHome.renderCategoryFilters('#category-filters', data.categories, (catId) => {
-      PharmacySearch.setCategory(catId);
-    });
+  PharmacyHome.renderCategoryFilters('#category-filters', CATEGORIES, (catId) => {
+    PharmacySearch.setCategory(catId);
   });
 </script>
 <script>
