@@ -1,15 +1,13 @@
 /**
- * search.js — منطق البحث والتصفية لصفحة المنتجات (v1.3)
- * استخدمه مع products.json الموجود في نفس المجلد.
- *
- * دمجه في صفحة المنتجات الحالية:
- *   <script src="search.js"></script>
- *   ...
- *   PharmacySearch.init('#search-input', '#products-grid');
+ * search.js — منطق البحث والتصفية لصفحة المنتجات (v2.0)
+ * يقرأ المنتجات من Firestore بدل products.json.
+ * لازم يُستدعى كـ module: <script type="module" src="search.js"></script>
  */
+import { fetchAllProducts, CATEGORIES } from "./firebase-config.js";
+
 const PharmacySearch = (function () {
   let allProducts = [];
-  let categories = [];
+  let categories = CATEGORIES;
 
   // إزالة التشكيل والمسافات الزائدة عشان البحث العربي يكون مرن
   function normalize(text) {
@@ -99,10 +97,8 @@ const PharmacySearch = (function () {
   }
 
   async function init(inputSelector, gridSelector, categorySelector) {
-    const res = await fetch("products.json");
-    const data = await res.json();
-    allProducts = data.products;
-    categories = data.categories;
+    allProducts = await fetchAllProducts();
+    categories = CATEGORIES;
 
     const input = document.querySelector(inputSelector);
     const grid = document.querySelector(gridSelector);
@@ -140,3 +136,5 @@ const PharmacySearch = (function () {
     },
   };
 })();
+
+window.PharmacySearch = PharmacySearch;
