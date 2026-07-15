@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نقل البيانات — أداة داخلية</title>
+<style>
+  body{font-family:sans-serif;background:#F6F2EA;color:#0E2A2E;padding:24px;line-height:1.8;}
+  button{background:#0F4C4F;color:#fff;border:none;padding:14px 24px;border-radius:10px;font-size:16px;cursor:pointer;margin-top:16px;}
+  button:disabled{opacity:.5;}
+  #log{margin-top:20px;background:#fff;border-radius:10px;padding:16px;white-space:pre-wrap;font-size:14px;max-height:400px;overflow-y:auto;border:1px solid #ddd;}
+  .ok{color:#2E7D55;}
+  .err{color:#C0392B;}
+</style>
+</head>
+<body>
+<h2>🔄 نقل بيانات المنتجات إلى Firestore</h2>
+<p>الصفحة دي أداة داخلية تُستخدم مرة واحدة بس لنقل الـ 18 منتج من products.json لقاعدة البيانات الحقيقية. بعد ما تنجح، متحتاجش تفتحها تاني.</p>
+<button id="migrate-btn">ابدأ النقل الآن</button>
+<div id="log"></div>
+
+<script type="module">
+  import { db, doc, setDoc } from "./firebase-config.js";
+
+  const btn = document.getElementById("migrate-btn");
+  const log = document.getElementById("log");
+
+  function addLog(msg, ok = true) {
+    const line = document.createElement("div");
+    line.className = ok ? "ok" : "err";
+    line.textContent = msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "جاري النقل...";
+    try {
+      const res = await fetch("products.json");
+      const data = await res.json();
+      const products = data.products;
+
+      addLog(`تم العثور على ${products.length} منتج. جاري النقل...`);
+
+      for (const p of products) {
+        const { id, ...rest } = p;
+        await setDoc(doc(db, "products", id), rest);
+        addLog(`✔ تم نقل: ${p.trade_name}`);
+      }
+
+      addLog("🎉 اكتمل النقل بنجاح! كل المنتجات دلوقتي في Firestore.");
+      btn.textContent = "تم النقل بنجاح ✅";
+    } catch (err) {
+      addLog("❌ حدث خطأ: " + err.message, false);
+      btn.disabled = false;
+      btn.textContent = "حاول تاني";
+    }
+  });
+</script>
+</body>
+</html>
