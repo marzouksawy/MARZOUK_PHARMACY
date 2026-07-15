@@ -24,10 +24,14 @@ const PharmacySearch = (function () {
   function matches(product, query) {
     const q = normalize(query);
     if (!q) return true;
+    const keywordsMatch = (product.keywords || []).some((k) =>
+      normalize(k).includes(q)
+    );
     return (
       normalize(product.trade_name).includes(q) ||
       normalize(product.active_ingredient).includes(q) ||
-      normalize(product.company).includes(q)
+      normalize(product.company).includes(q) ||
+      keywordsMatch
     );
   }
 
