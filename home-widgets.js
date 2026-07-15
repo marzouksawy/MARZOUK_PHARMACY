@@ -1,3 +1,5 @@
+import { fetchAllProducts } from "./firebase-config.js";
+
 const PharmacyHome = (function () {
   // ===== حالة الصيدلية (مفتوح/مغلق) بناءً على مواعيد العمل: يوميًا 8:00 ص - 1:00 ص =====
   function renderOpenStatus(selector) {
@@ -29,20 +31,17 @@ const PharmacyHome = (function () {
     el.textContent = tips[dayOfYear() % tips.length];
   }
 
-  // ===== دواء اليوم: يدور على منتج مقترح من القايمة، ويقرأ بياناته الكاملة من products.json =====
-  async function renderMedicineOfDay(selector, contentUrl, productsUrl) {
+  // ===== دواء اليوم: يدور على منتج مقترح من القايمة، ويقرأ بياناته الكاملة من Firestore =====
+  async function renderMedicineOfDay(selector, contentUrl) {
     const el = document.querySelector(selector);
     if (!el) return;
-    const [contentRes, productsRes] = await Promise.all([
-      fetch(contentUrl || "content.json"),
-      fetch(productsUrl || "products.json"),
-    ]);
+    const contentRes = await fetch(contentUrl || "content.json");
     const content = await contentRes.json();
-    const productsData = await productsRes.json();
     const ids = content.medicine_of_day_ids || [];
     if (!ids.length) return;
     const todayId = ids[dayOfYear() % ids.length];
-    const product = productsData.products.find((p) => p.id === todayId);
+    const allProducts = await fetchAllProducts();
+    const product = allProducts.find((p) => p.id === todayId);
     if (!product) return;
     el.innerHTML = `
       <h3 style="margin-bottom:6px;">${product.trade_name}</h3>
@@ -207,3 +206,5 @@ const PharmacyHome = (function () {
     initNotificationOptIn,
   };
 })();
+
+window.PharmacyHome = PharmacyHome;
