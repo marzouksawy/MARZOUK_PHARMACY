@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم — صيدلية د. مرزوق الصاوي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E2A2E; --petrol:#0F4C4F; --petrol-deep:#0A3638;
+    --cream:#F6F2EA; --paper:#FFFEFB; --amber:#D98C4A; --line:rgba(14,42,46,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'IBM Plex Sans Arabic', sans-serif; background:var(--cream); color:var(--ink);}
+  h1,h2,h3{font-family:'Tajawal';}
+  header{
+    background:var(--petrol-deep); color:#fff; padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  header h1{font-size:18px; margin:0;}
+  header .actions{display:flex; gap:10px; align-items:center;}
+  header a, header button{
+    background:rgba(255,255,255,0.12); color:#fff; border:none; padding:9px 16px;
+    border-radius:999px; font-family:'IBM Plex Sans Arabic'; font-size:13.5px; cursor:pointer; text-decoration:none;
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:20px;}
+
+  .toolbar{display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;}
+  .btn-primary{
+    background:var(--petrol); color:#fff; border:none; padding:12px 22px; border-radius:10px;
+    font-family:'Tajawal'; font-weight:700; font-size:14.5px; cursor:pointer;
+  }
+  input#admin-search{
+    flex:1; min-width:180px; padding:12px 16px; border-radius:10px; border:1px solid var(--line);
+    font-family:'IBM Plex Sans Arabic'; background:var(--paper);
+  }
+
+  .product-row{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+    display:flex; align-items:center; gap:14px; margin-bottom:10px;
+  }
+  .product-row .thumb{
+    width:50px; height:50px; border-radius:8px; background:var(--cream); display:flex;
+    align-items:center; justify-content:center; font-size:22px; flex-shrink:0; overflow:hidden;
+  }
+  .product-row .thumb img{width:100%; height:100%; object-fit:contain;}
+  .product-row .info{flex:1; min-width:0;}
+  .product-row .info h3{font-size:14.5px; margin:0 0 3px;}
+  .product-row .info p{font-size:12.5px; color:rgba(14,42,46,0.6); margin:0;}
+  .product-row .badge{font-size:11px; padding:3px 10px; border-radius:999px; font-weight:700;}
+  .badge.in{background:#E6F4EE; color:#1B8A5A;}
+  .badge.out{background:#FBEAEA; color:#C0392B;}
+  .product-row .row-actions{display:flex; gap:6px; flex-shrink:0;}
+  .product-row button{
+    border:none; border-radius:8px; padding:8px 12px; font-size:12.5px; cursor:pointer;
+    font-family:'IBM Plex Sans Arabic';
+  }
+  .btn-edit{background:var(--petrol); color:#fff;}
+  .btn-delete{background:#FBEAEA; color:#C0392B;}
+
+  /* نافذة النموذج (Modal) */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(14,42,46,0.55);
+    align-items:center; justify-content:center; padding:16px; z-index:50;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--paper); border-radius:16px; padding:26px; width:100%; max-width:480px;
+    max-height:90vh; overflow-y:auto;
+  }
+  .modal h2{font-size:18px; margin:0 0 18px;}
+  .modal label{font-size:13px; font-weight:600; display:block; margin:12px 0 5px;}
+  .modal input, .modal select, .modal textarea{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line);
+    font-family:'IBM Plex Sans Arabic'; font-size:13.5px; background:var(--cream);
+  }
+  .modal textarea{resize:vertical; min-height:60px;}
+  .modal .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .modal .toggle-row{display:flex; align-items:center; gap:8px; margin-top:14px;}
+  .modal .modal-actions{display:flex; gap:10px; margin-top:22px;}
+  .modal .btn-cancel{
+    background:var(--cream); color:var(--ink); border:1px solid var(--line);
+    padding:11px 20px; border-radius:10px; cursor:pointer; flex:1; font-family:'IBM Plex Sans Arabic';
+  }
+  .modal .btn-save{
+    background:var(--petrol); color:#fff; border:none; padding:11px 20px; border-radius:10px;
+    cursor:pointer; flex:2; font-family:'Tajawal'; font-weight:700;
+  }
+  #image-preview{width:80px; height:80px; border-radius:8px; background:var(--cream); margin-top:8px; overflow:hidden;}
+  #image-preview img{width:100%; height:100%; object-fit:contain;}
+  #save-status{font-size:13px; text-align:center; margin-top:10px; color:var(--petrol);}
+  .loading{text-align:center; padding:40px; color:rgba(14,42,46,0.5);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>لوحة تحكم صيدلية د. مرزوق الصاوي</h1>
+  <div class="actions">
+    <a href="index.html">عرض الموقع</a>
+    <button id="logout-btn">تسجيل الخروج</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <input id="admin-search" type="text" placeholder="ابحث في المنتجات...">
+    <button class="btn-primary" id="add-product-btn">+ إضافة منتج جديد</button>
+  </div>
+
+  <div id="products-list" class="loading">جاري تحميل المنتجات...</div>
+</div>
+
+<!-- نافذة إضافة/تعديل منتج -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">إضافة منتج جديد</h2>
+    <form id="product-form">
+      <input type="hidden" id="product-id">
+
+      <label>الاسم التجاري</label>
+      <input type="text" id="f-trade-name" required>
+
+      <label>المادة الفعالة</label>
+      <input type="text" id="f-active-ingredient">
+
+      <div class="row2">
+        <div>
+          <label>الفئة</label>
+          <select id="f-category">
+            <option value="drugs">أدوية</option>
+            <option value="supplements">فيتامينات ومكملات</option>
+            <option value="care">عناية ومستلزمات طبية</option>
+          </select>
+        </div>
+        <div>
+          <label>السعر (ج.م)</label>
+          <input type="number" id="f-price" step="0.01" required>
+        </div>
+      </div>
+
+      <label>الشركة المصنّعة (اختياري)</label>
+      <input type="text" id="f-company">
+
+      <label>وصف مختصر / الاستخدامات</label>
+      <textarea id="f-short-uses"></textarea>
+
+      <label>تحذيرات (اختياري)</label>
+      <textarea id="f-warnings"></textarea>
+
+      <label>صورة المنتج (اختياري)</label>
+      <input type="file" id="f-image-file" accept="image/*">
+      <div id="image-preview"></div>
+
+      <div class="toggle-row">
+        <input type="checkbox" id="f-available" style="width:auto;">
+        <label style="margin:0;">متوفر بالصيدلية حاليًا</label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="cancel-btn">إلغاء</button>
+        <button type="submit" class="btn-save" id="save-btn">حفظ المنتج</button>
+      </div>
+      <div id="save-status"></div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+  import { requireAuth, logout, fetchAllProducts, saveProduct, deleteProduct, CATEGORIES } from "./firebase-config.js";
+
+  let allProducts = [];
+
+  // حماية الصفحة: يرجّع لصفحة الدخول لو مفيش مستخدم مسجّل
+  await requireAuth("admin-login.html");
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await logout();
+    window.location.href = "admin-login.html";
+  });
+
+  // ===== تحميل وعرض المنتجات =====
+  async function loadProducts() {
+    const listEl = document.getElementById("products-list");
+    listEl.innerHTML = `<div class="loading">جاري تحميل المنتجات...</div>`;
+    allProducts = await fetchAllProducts();
+    renderProducts(allProducts);
+  }
+
+  function renderProducts(products) {
+    const listEl = document.getElementById("products-list");
+    if (!products.length) {
+      listEl.innerHTML = `<div class="loading">مفيش منتجات لسه.</div>`;
+      return;
+    }
+    listEl.innerHTML = products
+      .map((p) => {
+        const cat = CATEGORIES.find((c) => c.id === p.category) || {};
+        const thumb = p.image
+          ? `<img src="${p.image}" alt="">`
+          : cat.icon || "💊";
+        return `
+        <div class="product-row" data-id="${p.id}">
+          <div class="thumb">${thumb}</div>
+          <div class="info">
+            <h3>${p.trade_name}</h3>
+            <p>${cat.name || ""} · ${p.price} ج.م</p>
+          </div>
+          <span class="badge ${p.available ? "in" : "out"}">${p.available ? "متوفر" : "غير متوفر"}</span>
+          <div class="row-actions">
+            <button class="btn-edit" data-action="edit" data-id="${p.id}">تعديل</button>
+            <button class="btn-delete" data-action="delete" data-id="${p.id}">حذف</button>
+          </div>
+        </div>`;
+      })
+      .join("");
+  }
+
+  document.getElementById("admin-search").addEventListener("input", (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    const filtered = allProducts.filter((p) =>
+      (p.trade_name || "").toLowerCase().includes(q)
+    );
+    renderProducts(filtered);
+  });
+
+  // ===== فتح/غلق نافذة النموذج =====
+  const overlay = document.getElementById("modal-overlay");
+  const form = document.getElementById("product-form");
+  let currentImageBase64 = "";
+
+  function openModal(product = null) {
+    form.reset();
+    document.getElementById("image-preview").innerHTML = "";
+    currentImageBase64 = product ? product.image || "" : "";
+    if (currentImageBase64) {
+      document.getElementById("image-preview").innerHTML = `<img src="${currentImageBase64}">`;
+    }
+    document.getElementById("modal-title").textContent = product ? "تعديل منتج" : "إضافة منتج جديد";
+    document.getElementById("product-id").value = product ? product.id : "";
+    document.getElementById("f-trade-name").value = product ? product.trade_name || "" : "";
+    document.getElementById("f-active-ingredient").value = product ? product.active_ingredient || "" : "";
+    document.getElementById("f-category").value = product ? product.category || "drugs" : "drugs";
+    document.getElementById("f-price").value = product ? product.price || 0 : "";
+    document.getElementById("f-company").value = product ? product.company || "" : "";
+    document.getElementById("f-short-uses").value = product ? product.short_uses || "" : "";
+    document.getElementById("f-warnings").value = product ? product.warnings || "" : "";
+    document.getElementById("f-available").checked = product ? !!product.available : true;
+    document.getElementById("save-status").textContent = "";
+    overlay.classList.add("open");
+  }
+
+  function closeModal() {
+    overlay.classList.remove("open");
+  }
+
+  document.getElementById("add-product-btn").addEventListener("click", () => openModal());
+  document.getElementById("cancel-btn").addEventListener("click", closeModal);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  document.getElementById("products-list").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const product = allProducts.find((p) => p.id === id);
+    if (btn.dataset.action === "edit") {
+      openModal(product);
+    } else if (btn.dataset.action === "delete") {
+      if (confirm(`متأكد إنك عايز تحذف "${product.trade_name}"؟`)) {
+        deleteProduct(id).then(loadProducts);
+      }
+    }
+  });
+
+  // ===== رفع صورة وتحويلها base64 (بدون Firebase Storage) =====
+  document.getElementById("f-image-file").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      currentImageBase64 = reader.result;
+      document.getElementById("image-preview").innerHTML = `<img src="${currentImageBase64}">`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ===== حفظ المنتج =====
+  function slugify(text) {
+    return (
+      "p_" +
+      text
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9\u0600-\u06FF]+/g, "_")
+        .slice(0, 30) +
+      "_" +
+      Date.now().toString(36)
+    );
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById("save-btn");
+    const statusEl = document.getElementById("save-status");
+    saveBtn.disabled = true;
+    statusEl.textContent = "جاري الحفظ...";
+
+    let id = document.getElementById("product-id").value;
+    const tradeName = document.getElementById("f-trade-name").value.trim();
+    if (!id) id = slugify(tradeName);
+
+    const data = {
+      trade_name: tradeName,
+      active_ingredient: document.getElementById("f-active-ingredient").value.trim(),
+      category: document.getElementById("f-category").value,
+      price: parseFloat(document.getElementById("f-price").value) || 0,
+      currency: "EGP",
+      company: document.getElementById("f-company").value.trim(),
+      short_uses: document.getElementById("f-short-uses").value.trim(),
+      warnings: document.getElementById("f-warnings").value.trim(),
+      available: document.getElementById("f-available").checked,
+      image: currentImageBase64 || "",
+      general_dosage_note: "",
+      alternatives: [],
+    };
+
+    try {
+      await saveProduct(id, data);
+      statusEl.textContent = "✔ تم الحفظ بنجاح";
+      await loadProducts();
+      setTimeout(closeModal, 600);
+    } catch (err) {
+      statusEl.textContent = "❌ حصل خطأ: " + err.message;
+    }
+    saveBtn.disabled = false;
+  });
+
+  loadProducts();
+</script>
+</body>
+</html>
