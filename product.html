@@ -41,6 +41,7 @@
 
   .wrap{max-width:720px;margin:0 auto;padding:18px;}
 
+
   .card{
     position:relative;
     background:var(--card);
@@ -75,7 +76,7 @@
     opacity:.15;max-width:180px;
   }
   .meta-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-  .price{font-size:22px;font-weight:800;color:var(--accent);}
+  .price{font-size:22px;font-weight:800;font-family:'Cairo',sans-serif;color:var(--accent);}
   .price small{font-size:13px;font-weight:400;color:var(--muted);}
   .badge{font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;}
   .badge.in{background:#E6F4EE;color:#1B8A5A;}
@@ -115,6 +116,7 @@
     text-decoration:none;
   }
   .cta-whatsapp{background:var(--whatsapp);color:#fff;}
+  .cta-call{background:var(--bg);color:var(--primary);border:1px solid var(--line);}
 
   .not-found{padding:60px 20px;text-align:center;color:var(--muted);}
 </style>
@@ -127,113 +129,115 @@
 </div>
 
 <div class="wrap" id="app">
-  <!-- المحتوى يتم حقنه هنا -->
+  <!-- المحتوى يتم حقنه هنا عبر product.js -->
 </div>
 
 <script type="module">
-  import { fetchProduct, fetchAllProducts, CATEGORIES } from "./firebase-config.js";
+import { fetchProduct, fetchAllProducts, CATEGORIES } from "./firebase-config.js";
 
-  const WHATSAPP_NUMBER = "201062276534";
+const WHATSAPP_NUMBER = "201062276534"; // رقم واتساب صيدلية د. مرزوق الصاوي
 
-  function getParam(name){
-    return new URLSearchParams(window.location.search).get(name);
-  }
+function getParam(name){
+  return new URLSearchParams(window.location.search).get(name);
+}
 
-  function renderNotFound(){
-    document.getElementById('app').innerHTML = `
-      <div class="not-found">
-        <h2>المنتج غير موجود</h2>
-        <p>تأكد من الرابط أو ارجع لصفحة المنتجات.</p>
-      </div>`;
-  }
+function money(p){
+  return `${p.price.toFixed(2)} ${p.currency === 'EGP' ? 'ج.م' : p.currency}`;
+}
 
-  async function renderProduct(product){
-    const cat = CATEGORIES.find(c => c.id === product.category) || {};
+function renderNotFound(){
+  document.getElementById('app').innerHTML = `
+    <div class="not-found">
+      <h2>المنتج غير موجود</h2>
+      <p>تأكد من الرابط أو ارجع لصفحة المنتجات.</p>
+    </div>`;
+}
 
-    // جلب البدائل (لو موجودة) من نفس مجموعة المنتجات
-    let alts = [];
-    if (product.alternatives && product.alternatives.length) {
-      const all = await fetchAllProducts();
-      alts = product.alternatives
-        .map(id => all.find(p => p.id === id))
-        .filter(Boolean);
-    }
+function renderProduct(product, categories, allProducts){
+  const cat = categories.find(c => c.id === product.category) || {};
+  const alts = (product.alternatives || [])
+    .map(id => allProducts.find(p => p.id === id))
+    .filter(Boolean);
 
-    const waText = encodeURIComponent(`أستفسر عن توفر: ${product.trade_name}`);
+  const waText = encodeURIComponent(
+    product.available
+      ? `أريد طلب: ${product.trade_name}`
+      : `أسأل الصيدلي عن: ${product.trade_name} (شايف إنه غير متوفر حاليًا في الموقع)`
+  );
 
-    document.getElementById('app').innerHTML = `
-      <div class="card" style="--cat-color:${cat.color || '#0F5C55'}">
-        <div class="stub"></div>
-        <div class="media">
-          ${product.image
-            ? `<img src="${product.image}" alt="${product.trade_name}">`
-            : `<div class="fallback">${cat.icon || '💊'}</div>`}
-        </div>
-        <div class="body">
-          <span class="eyebrow">${cat.icon || ''} ${cat.name || ''}</span>
-          <h1>${product.trade_name}</h1>
-          <p class="generic">المادة الفعالة: ${product.active_ingredient || '—'}</p>
-          <div class="barcode"></div>
-
-          <div class="meta-row">
-            <div class="price">${product.available ? (product.price + ' ' + (product.currency === 'EGP' ? 'ج.م' : product.currency)) : ''}</div>
-            <span class="badge ${product.available ? 'in' : 'out'}">
-              ${product.available ? '✔ متوفر بالصيدلية' : '✕ غير متوفر حاليًا'}
-            </span>
-          </div>
-          <div class="company">${product.company ? `الشركة المصنّعة: ${product.company}` : ''}</div>
-
-          ${product.short_uses ? `
-          <div class="section">
-            <h2>الاستخدامات</h2>
-            <p>${product.short_uses}</p>
-          </div>` : ''}
-
-          ${product.warnings ? `
-          <div class="section">
-            <h2>تحذيرات مهمة</h2>
-            <div class="warn">${product.warnings}</div>
-          </div>` : ''}
-
-          ${product.general_dosage_note ? `
-          <div class="disclaimer">⚠️ ${product.general_dosage_note}</div>` : ''}
-
-          ${alts.length ? `
-          <div class="section">
-            <h2>بدائل متاحة</h2>
-            <div class="alts">
-              ${alts.map(a => `<a class="alt-chip" href="product.html?id=${a.id}">${a.trade_name}</a>`).join('')}
-            </div>
-          </div>` : ''}
-        </div>
+  document.getElementById('app').innerHTML = `
+    <div class="card" style="--cat-color:${cat.color || '#0F5C55'}">
+      <div class="stub"></div>
+      <div class="media">
+        <img src="${product.image}" alt="${product.trade_name}"
+             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'fallback\\'>${cat.icon || '💊'}</div>'">
       </div>
-    `;
+      <div class="body">
+        <span class="eyebrow">${cat.icon || ''} ${cat.name || ''}</span>
+        <h1>${product.trade_name}</h1>
+        <p class="generic">المادة الفعالة: ${product.active_ingredient}</p>
+        <div class="barcode"></div>
 
-    document.title = `${product.trade_name} | صيدلية د. مرزوق الصاوي`;
+        <div class="meta-row">
+          <div class="price">${money(product)}</div>
+          <span class="badge ${product.available ? 'in' : 'out'}">
+            ${product.available ? '✔ متوفر بالصيدلية' : '✕ غير متوفر حاليًا'}
+          </span>
+        </div>
+        <div class="company">${product.company ? `الشركة المصنّعة: ${product.company}` : ''}</div>
 
-    const bar = document.createElement('div');
-    bar.className = 'cta-bar';
-    bar.innerHTML = `
-      <a class="cta-whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}?text=${waText}" target="_blank">
-        💬 اطلب عبر واتساب
-      </a>
-    `;
-    document.body.appendChild(bar);
-  }
+        ${product.short_uses ? `
+        <div class="section">
+          <h2>الاستخدامات</h2>
+          <p>${product.short_uses}</p>
+        </div>` : ''}
 
-  (async function init(){
-    const id = getParam('id');
-    if(!id){ renderNotFound(); return; }
-    document.getElementById('app').innerHTML = `<p style="text-align:center;padding:40px;color:rgba(14,42,46,0.5);">جاري التحميل...</p>`;
-    try {
-      const product = await fetchProduct(id);
-      if(!product){ renderNotFound(); return; }
-      await renderProduct(product);
-    } catch(err) {
-      console.error(err);
-      renderNotFound();
-    }
-  })();
+        ${product.warnings ? `
+        <div class="section">
+          <h2>تحذيرات مهمة</h2>
+          <div class="warn">${product.warnings}</div>
+        </div>` : ''}
+
+        ${product.general_dosage_note ? `
+        <div class="disclaimer">⚠️ ${product.general_dosage_note}</div>` : ''}
+
+        ${alts.length ? `
+        <div class="section">
+          <h2>بدائل متاحة</h2>
+          <div class="alts">
+            ${alts.map(a => `<a class="alt-chip" href="product.html?id=${a.id}">${a.trade_name}</a>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+    </div>
+  `;
+
+  document.title = `${product.trade_name} | صيدلية د. مرزوق الصاوي`;
+
+  const bar = document.createElement('div');
+  bar.className = 'cta-bar';
+  bar.innerHTML = product.available
+    ? `
+    <a class="cta-whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}?text=${waText}" target="_blank">
+      💬 اطلب الآن عبر واتساب
+    </a>
+  `
+    : `
+    <a class="cta-call" style="flex:2;" href="https://wa.me/${WHATSAPP_NUMBER}?text=${waText}" target="_blank">
+      🩺 استشر الصيدلي (غير متوفر حاليًا)
+    </a>
+  `;
+  document.body.appendChild(bar);
+}
+
+(async function init(){
+  const id = getParam('id');
+  if(!id){ renderNotFound(); return; }
+  const product = await fetchProduct(id);
+  if(!product){ renderNotFound(); return; }
+  const allProducts = await fetchAllProducts();
+  renderProduct(product, CATEGORIES, allProducts);
+})();
 </script>
 </body>
 </html>
