@@ -8,7 +8,7 @@
 
 ## 🔑 الدخول للوحة التحكم
 
-- **الرابط:** `admin-login.html`
+- **الرابط الكامل:** https://marzouksawy.github.io/MARZOUK_PHARMACY/admin-login.html
 - **البريد الإلكتروني:** `marzouk.pharmacy.admin@gmail.com`
 - **كلمة المرور:** 🔒 غير مخزّنة هنا لأسباب أمنية — احتفظ بها في مكان خاص بعيدًا عن GitHub.
 
