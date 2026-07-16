@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدخول — لوحة التحكم</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E2A2E; --petrol:#0F4C4F; --petrol-deep:#0A3638;
+    --cream:#F6F2EA; --paper:#FFFEFB; --amber:#D98C4A; --line:rgba(14,42,46,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Sans Arabic', sans-serif; background:var(--cream); color:var(--ink);
+  }
+  .card{
+    background:var(--paper); border-radius:18px; padding:36px 30px; width:100%; max-width:380px;
+    box-shadow:0 24px 50px -18px rgba(14,42,46,0.28); border-top:6px solid var(--petrol);
+  }
+  .badge{
+    width:56px; height:56px; border-radius:50%; background:var(--petrol); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:20px;
+    margin:0 auto 18px; font-family:'Tajawal';
+  }
+  h1{font-family:'Tajawal'; font-size:22px; text-align:center; margin:0 0 6px; color:var(--petrol-deep);}
+  p.sub{text-align:center; color:rgba(14,42,46,0.6); font-size:13.5px; margin:0 0 26px;}
+  label{font-size:13.5px; font-weight:600; display:block; margin-bottom:6px;}
+  input{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    font-family:'IBM Plex Sans Arabic'; font-size:14.5px; margin-bottom:16px; background:var(--cream);
+  }
+  button{
+    width:100%; padding:13px; border-radius:10px; border:none; background:var(--petrol);
+    color:#fff; font-family:'Tajawal'; font-weight:700; font-size:15px; cursor:pointer;
+  }
+  button:disabled{opacity:.6;}
+  #error-msg{color:#C0392B; font-size:13px; text-align:center; margin-top:14px; display:none;}
+  a.back{display:block; text-align:center; margin-top:20px; font-size:13px; color:var(--petrol);}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="badge">ص</div>
+  <h1>لوحة تحكم الصيدلية</h1>
+  <p class="sub">تسجيل الدخول متاح للصيدلي فقط</p>
+
+  <form id="login-form">
+    <label for="email">البريد الإلكتروني</label>
+    <input type="email" id="email" required autocomplete="username">
+
+    <label for="password">كلمة المرور</label>
+    <input type="password" id="password" required autocomplete="current-password">
+
+    <button type="submit" id="login-btn">تسجيل الدخول</button>
+    <div id="error-msg"></div>
+  </form>
+
+  <a href="index.html" class="back">→ الرجوع للموقع</a>
+</div>
+
+<script type="module">
+  import { login } from "./firebase-config.js";
+
+  const form = document.getElementById("login-form");
+  const btn = document.getElementById("login-btn");
+  const errorMsg = document.getElementById("error-msg");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    btn.disabled = true;
+    btn.textContent = "جاري الدخول...";
+    errorMsg.style.display = "none";
+
+    try {
+      await login(email, password);
+      window.location.href = "admin-dashboard.html";
+    } catch (err) {
+      errorMsg.textContent = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+      errorMsg.style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "تسجيل الدخول";
+    }
+  });
+</script>
+</body>
+</html>
