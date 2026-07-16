@@ -1,21 +1,19 @@
-/**
- * search.js — منطق البحث والتصفية لصفحة المنتجات (v2.0)
- * يقرأ المنتجات من Firestore بدل products.json.
- * لازم يُستدعى كـ module: <script type="module" src="search.js"></script>
- */
+// search.js — منطق البحث والتصفية لصفحة المنتجات (v2.0)
+// دلوقتي بيقرأ المنتجات من Firestore بدل products.json
+// لازم يُستورد كـ module: <script type="module" src="search.js"></script>
+
 import { fetchAllProducts, CATEGORIES } from "./firebase-config.js";
 
 const PharmacySearch = (function () {
   let allProducts = [];
   let categories = CATEGORIES;
 
-  // إزالة التشكيل والمسافات الزائدة عشان البحث العربي يكون مرن
   function normalize(text) {
     return (text || "")
       .toString()
       .trim()
       .toLowerCase()
-      .replace(/[\u064B-\u0652]/g, "") // تشكيل
+      .replace(/[\u064B-\u0652]/g, "")
       .replace(/[أإآ]/g, "ا")
       .replace(/ة/g, "ه")
       .replace(/ى/g, "ي");
@@ -24,15 +22,20 @@ const PharmacySearch = (function () {
   function matches(product, query) {
     const q = normalize(query);
     if (!q) return true;
-    const keywordsMatch = (product.keywords || []).some((k) =>
-      normalize(k).includes(q)
-    );
+    const keywords = Array.isArray(product.keywords) ? product.keywords : [];
     return (
       normalize(product.trade_name).includes(q) ||
       normalize(product.active_ingredient).includes(q) ||
       normalize(product.company).includes(q) ||
-      keywordsMatch
+      keywords.some((k) => normalize(k).includes(q))
     );
+  }
+
+  function search(query, categoryId) {
+    return allProducts.filter((p) => {
+      const inCategory = !categoryId || categoryId === "all" || p.category === categoryId;
+      return inCategory && matches(p, query);
+    });
   }
 
   function getAlternatives(productId) {
@@ -48,97 +51,60 @@ const PharmacySearch = (function () {
     const thumb = product.image
       ? `<img src="${product.image}" alt="${product.trade_name}" style="width:100%;height:100%;object-fit:contain;padding:6px;">`
       : cat.icon || "💊";
-    const favActive = typeof PatientTools !== 'undefined' && PatientTools.isFavorite(product.id);
     return `
-      <div class="prod-card" style="position:relative;">
-        <button class="fav-btn" data-fav-id="${product.id}"
-          style="position:absolute;top:10px;left:10px;z-index:2;border:none;background:rgba(255,255,255,0.9);
-          width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer;">
-          ${favActive ? "❤️" : "🤍"}
-        </button>
+      <div class="prod-card">
         <div class="prod-thumb"${product.image ? ' style="background:#f5f5f5;"' : ""}>${thumb}</div>
         <div class="prod-body">
           <h3>${product.trade_name}</h3>
           <p>${product.short_uses || product.active_ingredient}</p>
           <div class="prod-foot">
-            <span class="prod-price">${product.price} ${product.currency === "EGP" ? "ج.م" : product.currency}</span>
+            <span class="prod-price">${product.available ? (product.price + " " + (product.currency === "EGP" ? "ج.م" : product.currency)) : "غير متوفر"}</span>
             <a href="product.html?id=${product.id}" class="prod-btn">التفاصيل</a>
           </div>
         </div>
       </div>`;
   }
 
-  let currentCategory = "all";
-  let favoritesOnly = false;
-
-  function search(query, categoryId) {
-    return allProducts.filter((p) => {
-      const inCategory = !categoryId || categoryId === "all" || p.category === categoryId;
-      const inFavorites =
-        !favoritesOnly || (typeof PatientTools !== 'undefined' && PatientTools.isFavorite(p.id));
-      return inCategory && inFavorites && matches(p, query);
-    });
-  }
-
-  function bindFavButtons(grid) {
-    grid.querySelectorAll(".fav-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.dataset.favId;
-        if (typeof PatientTools !== 'undefined') {
-          const nowActive = PatientTools.toggleFavorite(id);
-          btn.textContent = nowActive ? "❤️" : "🤍";
-          if (favoritesOnly && !nowActive) window.__pharmacyRunSearch && window.__pharmacyRunSearch();
-        }
-      });
-    });
-  }
-
   function renderResults(container, results) {
     container.innerHTML = results.length
       ? results.map(renderCard).join("")
       : `<p class="no-results">لا توجد منتجات مطابقة لبحثك.</p>`;
-    bindFavButtons(container);
   }
 
   async function init(inputSelector, gridSelector, categorySelector) {
-    allProducts = await fetchAllProducts();
-    categories = CATEGORIES;
+    const grid = document.querySelector(gridSelector);
+    grid.innerHTML = `<p class="no-results">جاري تحميل المنتجات...</p>`;
+
+    try {
+      allProducts = await fetchAllProducts();
+    } catch (err) {
+      grid.innerHTML = `<p class="no-results">تعذّر تحميل المنتجات، حاولي تحديث الصفحة.</p>`;
+      console.error(err);
+      return;
+    }
 
     const input = document.querySelector(inputSelector);
-    const grid = document.querySelector(gridSelector);
     const catSelect = categorySelector ? document.querySelector(categorySelector) : null;
 
     function runSearch() {
       const query = input ? input.value : "";
-      const categoryId = catSelect ? catSelect.value : currentCategory;
+      const categoryId = catSelect ? catSelect.value : "all";
       renderResults(grid, search(query, categoryId));
     }
 
-    if (input) input.addEventListener("input", runSearch);
+    let debounceTimer;
+    if (input) {
+      input.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(runSearch, 150);
+      });
+    }
     if (catSelect) catSelect.addEventListener("change", runSearch);
 
-    // يُستدعى من أزرار الفلتر في home-widgets.js
-    window.__pharmacyRunSearch = runSearch;
-    window.__pharmacySetCategory = function (catId) {
-      currentCategory = catId;
-      runSearch();
-    };
-
-    runSearch(); // عرض كل المنتجات أول ما الصفحة تفتح
+    runSearch();
   }
 
-  return {
-    init,
-    search,
-    getAlternatives,
-    normalize,
-    getCategories: () => categories,
-    setCategory: (catId) => window.__pharmacySetCategory && window.__pharmacySetCategory(catId),
-    setFavoritesOnly: (val) => {
-      favoritesOnly = val;
-      window.__pharmacyRunSearch && window.__pharmacyRunSearch();
-    },
-  };
+  return { init, search, getAlternatives, normalize };
 })();
 
 window.PharmacySearch = PharmacySearch;
