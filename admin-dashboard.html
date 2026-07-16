@@ -142,6 +142,9 @@
       <label>الشركة المصنّعة (اختياري)</label>
       <input type="text" id="f-company">
 
+      <label>كلمات بحث إضافية بالإنجليزي (افصل بينهم بفاصلة ،)</label>
+      <input type="text" id="f-keywords" placeholder="مثال: Panadol, Panadol Extra">
+
       <label>وصف مختصر / الاستخدامات</label>
       <textarea id="f-short-uses"></textarea>
 
@@ -218,9 +221,12 @@
 
   document.getElementById("admin-search").addEventListener("input", (e) => {
     const q = e.target.value.trim().toLowerCase();
-    const filtered = allProducts.filter((p) =>
-      (p.trade_name || "").toLowerCase().includes(q)
-    );
+    const filtered = allProducts.filter((p) => {
+      const inTradeName = (p.trade_name || "").toLowerCase().includes(q);
+      const inActiveIngredient = (p.active_ingredient || "").toLowerCase().includes(q);
+      const inKeywords = (p.keywords || []).some((k) => (k || "").toLowerCase().includes(q));
+      return inTradeName || inActiveIngredient || inKeywords;
+    });
     renderProducts(filtered);
   });
 
@@ -243,6 +249,7 @@
     document.getElementById("f-category").value = product ? product.category || "drugs" : "drugs";
     document.getElementById("f-price").value = product ? product.price || 0 : "";
     document.getElementById("f-company").value = product ? product.company || "" : "";
+    document.getElementById("f-keywords").value = product && product.keywords ? product.keywords.join(", ") : "";
     document.getElementById("f-short-uses").value = product ? product.short_uses || "" : "";
     document.getElementById("f-warnings").value = product ? product.warnings || "" : "";
     document.getElementById("f-available").checked = product ? !!product.available : true;
@@ -318,6 +325,10 @@
       price: parseFloat(document.getElementById("f-price").value) || 0,
       currency: "EGP",
       company: document.getElementById("f-company").value.trim(),
+      keywords: document.getElementById("f-keywords").value
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean),
       short_uses: document.getElementById("f-short-uses").value.trim(),
       warnings: document.getElementById("f-warnings").value.trim(),
       available: document.getElementById("f-available").checked,
