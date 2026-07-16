@@ -1,5 +1,7 @@
 // firebase-config.js — إعداد Firebase المشترك لكل صفحات الموقع
 // يُستورد كـ ES module: <script type="module" src="firebase-config.js"></script>
+// ملحوظة: مفيش Firebase Storage هنا (يحتاج خطة Blaze مدفوعة).
+// الصور بتتخزن كـ base64 جوه مستند المنتج نفسه في Firestore (حد أقصى ~700 كيلوبايت للصورة).
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -12,6 +14,12 @@ import {
   updateDoc,
   deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBisIWwa7v48bA3Vb4dds6_G8dk9OIvH7w",
@@ -25,6 +33,31 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ===== المصادقة (تسجيل الدخول للوحة التحكم) =====
+export function login(email, password) {
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+export function logout() {
+  return signOut(auth);
+}
+
+// حماية صفحة: لو مفيش مستخدم مسجّل دخول، يرجّعه لصفحة تسجيل الدخول
+export function requireAuth(redirectTo = "admin-login.html") {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = redirectTo;
+      } else {
+        resolve(user);
+      }
+    });
+  });
+}
+
+export { auth };
 
 // تصنيفات ثابتة (نادرًا ما تتغير، فمش محتاجة قاعدة بيانات)
 export const CATEGORIES = [
@@ -46,12 +79,12 @@ export async function fetchProduct(id) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-// إضافة/تعديل منتج (تُستخدم في لوحة التحكم لاحقًا)
+// إضافة/تعديل منتج
 export async function saveProduct(id, data) {
   await setDoc(doc(db, "products", id), data, { merge: true });
 }
 
-// حذف منتج (تُستخدم في لوحة التحكم لاحقًا)
+// حذف منتج
 export async function deleteProduct(id) {
   await deleteDoc(doc(db, "products", id));
 }
