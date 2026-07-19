@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حذف أصناف بالاسم — أداة داخلية</title>
+<style>
+  body{font-family:sans-serif;background:#F6F2EA;color:#0E2A2E;padding:24px;line-height:1.8;}
+  input, textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid #ccc;font-size:16px;margin-top:8px;}
+  button{background:#C0392B;color:#fff;border:none;padding:14px 24px;border-radius:10px;font-size:16px;cursor:pointer;margin-top:16px;}
+  button:disabled{opacity:.5;}
+  #log{margin-top:20px;background:#fff;border-radius:10px;padding:16px;white-space:pre-wrap;font-size:14px;max-height:400px;overflow-y:auto;border:1px solid #ddd;}
+  .ok{color:#2E7D55;}
+  .err{color:#C0392B;}
+  .warn{color:#D98C4A;}
+</style>
+</head>
+<body>
+<h2>🗑️ حذف أصناف بالاسم التجاري</h2>
+<p>اكتب اسم الصنف (أو جزء منه) في كل سطر، وهنبحث عنه في قاعدة البيانات ونعرضلك النتائج قبل الحذف النهائي.</p>
+<textarea id="names" rows="6" placeholder="مثال:&#10;PANADOL 1G&#10;TYLENOL&#10;ZANTAC"></textarea>
+<button id="search-btn">1) دور على الأصناف دي</button>
+<div id="log"></div>
+<button id="delete-btn" style="display:none;">2) احذف الأصناف اللي فوق فعلاً</button>
+
+<script type="module">
+  import { requireAuth, deleteProduct, fetchAllProducts } from "./firebase-config.js";
+
+  const namesBox = document.getElementById("names");
+  const searchBtn = document.getElementById("search-btn");
+  const deleteBtn = document.getElementById("delete-btn");
+  const log = document.getElementById("log");
+
+  function addLog(msg, cls = "ok") {
+    const line = document.createElement("div");
+    line.className = cls;
+    line.textContent = msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  await requireAuth();
+  addLog("تم تسجيل الدخول بنجاح. اكتب الأسماء ودوس بحث.");
+
+  let foundIds = [];
+
+  searchBtn.addEventListener("click", async () => {
+    log.innerHTML = "";
+    foundIds = [];
+    const terms = namesBox.value.split("\n").map(s => s.trim()).filter(Boolean);
+    if (terms.length === 0) { addLog("اكتب اسم واحد على الأقل.", "err"); return; }
+
+    searchBtn.disabled = true;
+    addLog("جاري البحث...");
+    const all = await fetchAllProducts();
+
+    for (const term of terms) {
+      const matches = all.filter(p => (p.trade_name || "").toUpperCase().includes(term.toUpperCase()));
+      if (matches.length === 0) {
+        addLog(`⚠ "${term}" — مفيش نتيجة`, "warn");
+      } else {
+        for (const m of matches) {
+          addLog(`✔ ${m.id}: ${m.trade_name}`, "ok");
+          foundIds.push(m.id);
+        }
+      }
+    }
+    addLog(`--- إجمالي ${foundIds.length} صنف هيتحذف لو دوست الزرار التاني ---`, "warn");
+    searchBtn.disabled = false;
+    if (foundIds.length > 0) deleteBtn.style.display = "inline-block";
+  });
+
+  deleteBtn.addEventListener("click", async () => {
+    deleteBtn.disabled = true;
+    for (const id of foundIds) {
+      await deleteProduct(id);
+      addLog(`🗑 تم حذف: ${id}`, "err");
+    }
+    addLog("🎉 تم حذف كل الأصناف المحددة.", "ok");
+    deleteBtn.style.display = "none";
+  });
+</script>
+</body>
+</html>
