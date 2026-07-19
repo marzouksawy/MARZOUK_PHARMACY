@@ -37,7 +37,7 @@
     btn.disabled = true;
     btn.textContent = "جاري النقل...";
     try {
-      const res = await fetch("products.json");
+      const res = await fetch("products_reference.json");
       const data = await res.json();
       const products = data.products;
 
