@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حذف أدوية الجدول والمستشفيات — أداة داخلية</title>
+<style>
+  body{font-family:sans-serif;background:#F6F2EA;color:#0E2A2E;padding:24px;line-height:1.8;}
+  button{background:#C0392B;color:#fff;border:none;padding:14px 24px;border-radius:10px;font-size:16px;cursor:pointer;margin-top:16px;}
+  button:disabled{opacity:.5;}
+  #log{margin-top:20px;background:#fff;border-radius:10px;padding:16px;white-space:pre-wrap;font-size:14px;max-height:400px;overflow-y:auto;border:1px solid #ddd;}
+  .ok{color:#2E7D55;}
+  .err{color:#C0392B;}
+</style>
+</head>
+<body>
+<h2>🗑️ حذف أدوية الجدول والمستشفيات من Firestore</h2>
+<p>الصفحة دي أداة داخلية تُستخدم مرة واحدة بس لحذف 229 صنف (مخدرات/مؤثرات عقلية وأدوية مستشفيات بحتة) من قاعدة البيانات. محتاج تكون مسجّل دخول كأدمن.</p>
+<button id="delete-btn">ابدأ الحذف الآن</button>
+<div id="log"></div>
+
+<script type="module">
+  import { requireAuth, deleteProduct } from "./firebase-config.js";
+
+  const btn = document.getElementById("delete-btn");
+  const log = document.getElementById("log");
+
+  function addLog(msg, ok = true) {
+    const line = document.createElement("div");
+    line.className = ok ? "ok" : "err";
+    line.textContent = msg;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  await requireAuth();
+  addLog("تم تسجيل الدخول بنجاح. جاهز للحذف.");
+
+  const idsToDelete = ["p055", "p056", "p104", "p105", "p109", "p110", "p183", "p184", "p185", "p186", "p230", "p231", "p232", "p245", "p246", "p295", "p348", "p349", "p350", "p636", "p637", "p638", "p717", "p718", "p719", "p928", "p929", "p936", "p937", "p964", "p965", "p1027", "p1028", "p1029", "p1053", "p1054", "p1055", "p1057", "p1058", "p1155", "p1156", "p1157", "p1418", "p1419", "p1420", "p1421", "p1701", "p1702", "p1703", "p1812", "p1813", "p1814", "p1815", "p1855", "p1856", "p1857", "p1876", "p1877", "p1878", "p1970", "p1971", "p1972", "p1973", "p1974", "p2039", "p2040", "p2041", "p2042", "p2106", "p2107", "p2108", "p2109", "p2110", "p2111", "p2112", "p2345", "p2346", "p2347", "p2348", "p2349", "p2350", "p2351", "p2352", "p2353", "p2433", "p2434", "p2456", "p2457", "p2458", "p2459", "p2568", "p2569", "p2570", "p2571", "p2572", "p2573", "p2659", "p2660", "p2661", "p2816", "p2817", "p2818", "p3016", "p3017", "p3018", "p3276", "p3277", "p3293", "p3294", "p3295", "p3296", "p3337", "p3338", "p3339", "p3414", "p3415", "p3416", "p3539", "p3540", "p3541", "p3542", "p3543", "p3544", "p3545", "p3546", "p3547", "p3548", "p3689", "p3701", "p3702", "p3703", "p3704", "p3705", "p3767", "p3768", "p3769", "p3770", "p3771", "p3838", "p3839", "p3840", "p3841", "p4169", "p4170", "p4171", "p4172", "p052", "p075", "p358", "p359", "p380", "p381", "p456", "p457", "p677", "p678", "p679", "p680", "p681", "p757", "p758", "p1044", "p1045", "p1046", "p1083", "p1084", "p1085", "p1139", "p1140", "p1141", "p1142", "p1143", "p1248", "p1249", "p1250", "p1363", "p1364", "p1440", "p1441", "p1517", "p1518", "p1579", "p1580", "p1581", "p1586", "p1587", "p1636", "p1637", "p1953", "p1954", "p1955", "p1985", "p1986", "p1987", "p1988", "p2308", "p2309", "p2310", "p2362", "p2363", "p2364", "p2514", "p2515", "p2592", "p2593", "p2885", "p2886", "p2907", "p2908", "p2909", "p3184", "p3185", "p3310", "p3311", "p3312", "p3313", "p3314", "p3315", "p3560", "p3561", "p3781", "p3782", "p3783", "p3784", "p3871", "p3872", "p3873", "p3888", "p3889"];
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "جاري الحذف...";
+    try {
+      addLog(`جاري حذف ${idsToDelete.length} صنف...`);
+      for (const id of idsToDelete) {
+        await deleteProduct(id);
+        addLog(`✔ تم حذف: ${id}`);
+      }
+      addLog("🎉 اكتمل الحذف بنجاح! كل الأصناف المحددة اتشالت من Firestore.");
+      btn.textContent = "تم الحذف بنجاح ✅";
+    } catch (err) {
+      addLog("❌ حدث خطأ: " + err.message, false);
+      btn.disabled = false;
+      btn.textContent = "حاول تاني";
+    }
+  });
+</script>
+</body>
+</html>
