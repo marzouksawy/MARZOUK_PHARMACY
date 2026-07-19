@@ -15,7 +15,7 @@
 </head>
 <body>
 <h2>🔄 نقل بيانات المنتجات إلى Firestore</h2>
-<p>الصفحة دي أداة داخلية تُستخدم مرة واحدة بس لنقل الـ 18 منتج من products.json لقاعدة البيانات الحقيقية. بعد ما تنجح، متحتاجش تفتحها تاني.</p>
+<p>الصفحة دي أداة داخلية تُستخدم مرة واحدة بس لنقل قائمة المرجع الدوائي (5 ملفات) لقاعدة البيانات الحقيقية. بعد ما تنجح، متحتاجش تفتحها تاني.</p>
 <button id="migrate-btn">ابدأ النقل الآن</button>
 <div id="log"></div>
 
@@ -37,13 +37,17 @@
     btn.disabled = true;
     btn.textContent = "جاري النقل...";
     try {
-      const res = await fetch("products_reference.json");
-      const data = await res.json();
-      const products = data.products;
+      let allProducts = [];
+      for (let i = 1; i <= 5; i++) {
+        const res = await fetch(`products_reference_${i}.json`);
+        const data = await res.json();
+        allProducts = allProducts.concat(data.products);
+        addLog(`تم تحميل جزء ${i}: ${data.products.length} منتج`);
+      }
 
-      addLog(`تم العثور على ${products.length} منتج. جاري النقل...`);
+      addLog(`تم العثور على ${allProducts.length} منتج إجمالاً. جاري النقل...`);
 
-      for (const p of products) {
+      for (const p of allProducts) {
         const { id, ...rest } = p;
         await setDoc(doc(db, "products", id), rest);
         addLog(`✔ تم نقل: ${p.trade_name}`);
