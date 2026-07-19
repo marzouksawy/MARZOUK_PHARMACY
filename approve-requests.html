@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مراجعة طلبات التعديل</title>
+<style>
+  body{font-family:sans-serif;background:#F6F2EA;color:#0E2A2E;padding:16px;line-height:1.6;}
+  .card{background:#fff;border-radius:10px;padding:14px;margin-top:14px;border:1px solid #ddd;}
+  .card h3{margin:0 0 4px 0;font-size:16px;}
+  .card p{margin:3px 0;font-size:14px;color:#444;}
+  .photos{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .photos img{width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid #ccc;}
+  .row{display:flex;gap:8px;margin-top:10px;}
+  button{flex:1;border:none;padding:12px;border-radius:8px;font-size:15px;cursor:pointer;color:#fff;}
+  .approve{background:#2E7D55;}
+  .reject{background:#C0392B;}
+  button:disabled{opacity:.5;}
+  .status{font-size:13px;margin-top:16px;}
+  .ok{color:#2E7D55;}
+  .err{color:#C0392B;}
+  .empty{text-align:center;color:#888;margin-top:40px;}
+</style>
+</head>
+<body>
+<h2>✅ مراجعة طلبات التعديل</h2>
+<p>مراجعة اقتراحات المساعدين قبل ما تظهر للزبون.</p>
+<div id="status" class="status"></div>
+<div id="requests"></div>
+
+<script type="module">
+  import { requireAuth, db, doc, setDoc, getDocs, collection, saveProduct } from "./firebase-config.js";
+
+  const statusDiv = document.getElementById("status");
+  const requestsDiv = document.getElementById("requests");
+
+  await requireAuth();
+  statusDiv.innerHTML = '<span class="ok">جاري تحميل الطلبات...</span>';
+
+  async function loadRequests() {
+    requestsDiv.innerHTML = "";
+    const snap = await getDocs(collection(db, "edit_requests"));
+    const pending = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(r => r.status === "pending")
+      .sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+
+    if (pending.length === 0) {
+      requestsDiv.innerHTML = '<div class="empty">مفيش طلبات معلقة دلوقتي 🎉</div>';
+      statusDiv.innerHTML = "";
+      return;
+    }
+
+    statusDiv.innerHTML = '<span class="ok">' + pending.length + ' طلب معلّق</span>';
+
+    pending.forEach(r => {
+      const card = document.createElement("div");
+      card.className = "card";
+      const photosHtml = (r.photos || []).map(p => `<img src="${p}">`).join("");
+      const nameChanged = r.suggested_name && r.suggested_name !== r.trade_name;
+      card.innerHTML = `
+        <h3>${r.is_new ? "➕ صنف جديد: " : ""}${r.trade_name || r.productId}</h3>
+        ${r.is_new ? `<p style="color:#D98C4A;">مادة فعالة: ${r.active_ingredient || "-"} | شركة: ${r.company || "-"} | شكل: ${r.dosage_form || "-"} | فئة: ${r.category || "-"}</p>` : ""}
+        ${!r.is_new && nameChanged ? `<p style="color:#D98C4A;">✏️ اسم مقترح: <b>${r.suggested_name}</b></p>` : ""}
+        <p>السعر المقترح: ${r.suggested_price} ج.م</p>
+        <p>متاح: ${r.suggested_available ? "نعم ✅" : "لا ❌"}</p>
+        <p>اقترحه: ${r.submitted_by || "غير معروف"}</p>
+        <div class="photos">${photosHtml}</div>
+        <div class="row">
+          <button class="approve" data-id="${r.id}">موافقة ✅</button>
+          <button class="reject" data-id="${r.id}">رفض ❌</button>
+        </div>
+      `;
+      requestsDiv.appendChild(card);
+    });
+  }
+
+  requestsDiv.addEventListener("click", async (e) => {
+    const id = e.target.dataset.id;
+    if (!id) return;
+    const snap = await getDocs(collection(db, "edit_requests"));
+    const reqDoc = snap.docs.find(d => d.id === id);
+    if (!reqDoc) return;
+    const r = reqDoc.data();
+
+    e.target.disabled = true;
+    e.target.textContent = "جاري الحفظ...";
+
+    try {
+      if (e.target.classList.contains("approve")) {
+        if (r.is_new) {
+          const slug = (r.trade_name || "item")
+            .replace(/[^A-Za-z0-9\u0600-\u06FF]+/g, "-")
+            .toLowerCase()
+            .slice(0, 40);
+          const newId = "new-" + slug + "-" + Date.now().toString().slice(-5);
+          const newProduct = {
+            trade_name: r.trade_name,
+            active_ingredient: r.active_ingredient || "",
+            company: r.company || "",
+            dosage_form: r.dosage_form || "",
+            category: r.category || "drugs",
+            price: r.suggested_price,
+            currency: "EGP",
+            available: r.suggested_available,
+            short_uses: "",
+            warnings: "",
+            general_dosage_note: "",
+            alternatives: [],
+            pending: false,
+          };
+          if (r.photos && r.photos.length > 0) {
+            newProduct.image = r.photos[0];
+            newProduct.images = r.photos;
+          }
+          await saveProduct(newId, newProduct);
+        } else {
+          const productUpdate = {
+            price: r.suggested_price,
+            available: r.suggested_available,
+            pending: false,
+          };
+          if (r.suggested_name) {
+            productUpdate.trade_name = r.suggested_name;
+          }
+          if (r.photos && r.photos.length > 0) {
+            productUpdate.image = r.photos[0];
+            productUpdate.images = r.photos;
+          }
+          await saveProduct(r.productId, productUpdate);
+        }
+        await setDoc(doc(db, "edit_requests", id), { status: "approved" }, { merge: true });
+      } else {
+        await setDoc(doc(db, "edit_requests", id), { status: "rejected" }, { merge: true });
+      }
+      await loadRequests();
+    } catch (err) {
+      alert("حصل خطأ: " + err.message);
+      e.target.disabled = false;
+    }
+  });
+
+  await loadRequests();
+</script>
+</body>
+</html>
