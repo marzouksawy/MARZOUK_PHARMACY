@@ -159,6 +159,23 @@
           canvas.height = height;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
+
+          // العلامة المائية: اسم الصيدلية
+          const watermarkText = "صيدلية د. مرزوق الصاوي";
+          const fontSize = Math.max(14, Math.round(width * 0.04));
+          ctx.font = fontSize + "px sans-serif";
+          const textWidth = ctx.measureText(watermarkText).width;
+          const padding = 8;
+          const boxWidth = textWidth + padding * 2;
+          const boxHeight = fontSize + padding * 1.6;
+          const wx = width - boxWidth - 10;
+          const wy = height - boxHeight - 10;
+          ctx.fillStyle = "rgba(15,76,79,0.65)";
+          ctx.fillRect(wx, wy, boxWidth, boxHeight);
+          ctx.fillStyle = "rgba(255,255,255,0.95)";
+          ctx.textBaseline = "middle";
+          ctx.fillText(watermarkText, wx + padding, wy + boxHeight / 2);
+
           let quality = 0.8;
           let dataUrl = canvas.toDataURL("image/jpeg", quality);
           while (dataUrl.length > maxSizeKB * 1024 * 1.37 && quality > 0.2) {
@@ -237,7 +254,17 @@
         payload.category = document.getElementById("new-category").value;
       }
       await setDoc(ref, payload);
-      statusDiv.innerHTML = '<span class="ok">✅ تم إرسال ' + (isNewProduct ? "الصنف الجديد" : "الاقتراح") + '، في انتظار موافقة الصيدلي.</span>';
+      const waText = encodeURIComponent(
+        `📝 اقتراح تعديل جديد من ${user.email || "مساعد"}\n` +
+        `الصنف: ${payload.trade_name}\n` +
+        `السعر المقترح: ${payload.suggested_price} ج.م\n` +
+        `متاح: ${payload.suggested_available ? "نعم" : "لا"}\n` +
+        `ادخل approve-requests.html للمراجعة 🙏`
+      );
+      const waLink = `https://wa.me/966541796684?text=${waText}`;
+      statusDiv.innerHTML =
+        '<span class="ok">✅ تم إرسال ' + (isNewProduct ? "الصنف الجديد" : "الاقتراح") + '، في انتظار موافقة الصيدلي.</span>' +
+        '<br><a href="' + waLink + '" target="_blank" style="display:inline-block;margin-top:10px;background:#25D366;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">📲 بلّغ الصيدلي على واتساب</a>';
       formDiv.style.display = "none";
       selectedProduct = null;
       isNewProduct = false;
