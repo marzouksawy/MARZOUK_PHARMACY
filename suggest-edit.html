@@ -298,7 +298,7 @@
       alert("لازم تكتب الاسم التجاري للصنف الجديد.");
       return;
     }
-    if (!priceInput.value || Number(priceInput.value) <= 0) {
+    if (!deleteRequestInput.checked && (!priceInput.value || Number(priceInput.value) <= 0)) {
       alert("لازم تدخل سعر صحيح.");
       return;
     }
@@ -320,7 +320,7 @@
         productId: isNewProduct ? null : selectedProduct.id,
         trade_name: isNewProduct ? nameVal : selectedProduct.trade_name,
         suggested_name: isNewProduct ? nameVal : (nameVal || selectedProduct.trade_name),
-        suggested_price: Number(priceInput.value),
+        suggested_price: Number(priceInput.value) || 0,
         suggested_available: availableInput.checked,
         suggested_delete: isNewProduct ? false : deleteRequestInput.checked,
         photos: photos,
