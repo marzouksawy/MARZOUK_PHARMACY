@@ -19,6 +19,11 @@
   .ok{color:#2E7D55;}
   .err{color:#C0392B;}
   label{font-size:14px;font-weight:bold;display:block;margin-top:12px;}
+  #session-summary{display:none;background:#fff;border-radius:10px;padding:14px;margin-top:16px;border:2px solid #25D366;}
+  #session-summary h3{margin:0 0 8px 0;font-size:15px;}
+  #session-list{padding-right:20px;font-size:13px;margin:0;}
+  #session-list li{margin-bottom:4px;}
+  #session-wa-btn{display:inline-block;margin-top:10px;background:#25D366;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:14px;}
 </style>
 </head>
 <body>
@@ -62,6 +67,12 @@
 
 <div id="status" class="status"></div>
 
+<div id="session-summary">
+  <h3>📋 ملخص الاقتراحات المُرسلة اليوم (<span id="session-count">0</span>)</h3>
+  <ul id="session-list"></ul>
+  <a id="session-wa-btn" href="#" target="_blank">📲 بلّغ الصيدلي على واتساب بكل الاقتراحات</a>
+</div>
+
 <script type="module">
   import { requireAuth, fetchAllProducts, db, doc, setDoc, collection, auth } from "./firebase-config.js";
 
@@ -79,12 +90,35 @@
   const newFieldsDiv = document.getElementById("new-fields");
   let isNewProduct = false;
 
+  function todayKey() {
+    const d = new Date();
+    return "suggestions_" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+
+  function loadSessionSuggestions() {
+    try {
+      const raw = localStorage.getItem(todayKey());
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveSessionSuggestions() {
+    try {
+      localStorage.setItem(todayKey(), JSON.stringify(sessionSuggestions));
+    } catch (e) {}
+  }
+
+  let sessionSuggestions = loadSessionSuggestions();
+
   const user = await requireAuth();
   statusDiv.innerHTML = '<span class="ok">جاري تحميل المنتجات...</span>';
 
   let allProducts = await fetchAllProducts();
   let selectedProduct = null;
   statusDiv.innerHTML = '<span class="ok">تم تحميل ' + allProducts.length + ' صنف.</span>';
+  updateSessionSummary();
 
   searchBox.addEventListener("input", () => {
     const term = searchBox.value.trim().toUpperCase();
@@ -160,7 +194,6 @@
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
 
-          // العلامة المائية: اسم الصيدلية
           const watermarkText = "صيدلية د. مرزوق الصاوي";
           const fontSize = Math.max(14, Math.round(width * 0.04));
           ctx.font = fontSize + "px sans-serif";
@@ -211,6 +244,39 @@
   document.getElementById("photo2").addEventListener("change", handlePhotoPreview);
   document.getElementById("photo3").addEventListener("change", handlePhotoPreview);
 
+  function updateSessionSummary() {
+    const summaryDiv = document.getElementById("session-summary");
+    const listEl = document.getElementById("session-list");
+    const countEl = document.getElementById("session-count");
+    const waBtn = document.getElementById("session-wa-btn");
+
+    if (sessionSuggestions.length === 0) {
+      summaryDiv.style.display = "none";
+      return;
+    }
+    summaryDiv.style.display = "block";
+    countEl.textContent = sessionSuggestions.length;
+
+    listEl.innerHTML = "";
+    sessionSuggestions.forEach((s, i) => {
+      const li = document.createElement("li");
+      li.textContent = `${i + 1}. ${s.trade_name} — ${s.price} ج.م — ${s.available ? "متاح" : "غير متاح"}`;
+      listEl.appendChild(li);
+    });
+
+    const lines = sessionSuggestions.map((s, i) =>
+      `${i + 1}. ${s.trade_name} — ${s.price} ج.م — ${s.available ? "متاح" : "غير متاح"}`
+    ).join("\n");
+
+    const waText = encodeURIComponent(
+      `📝 ملخص اقتراحات من ${sessionSuggestions[0].submitted_by}\n` +
+      `عدد الاقتراحات: ${sessionSuggestions.length}\n\n` +
+      lines +
+      `\n\nادخل approve-requests.html للمراجعة 🙏`
+    );
+    waBtn.href = `https://wa.me/966541796684?text=${waText}`;
+  }
+
   submitBtn.addEventListener("click", async () => {
     if (!selectedProduct && !isNewProduct) return;
     const nameVal = document.getElementById("name-edit").value.trim();
@@ -254,17 +320,19 @@
         payload.category = document.getElementById("new-category").value;
       }
       await setDoc(ref, payload);
-      const waText = encodeURIComponent(
-        `📝 اقتراح تعديل جديد من ${user.email || "مساعد"}\n` +
-        `الصنف: ${payload.trade_name}\n` +
-        `السعر المقترح: ${payload.suggested_price} ج.م\n` +
-        `متاح: ${payload.suggested_available ? "نعم" : "لا"}\n` +
-        `ادخل approve-requests.html للمراجعة 🙏`
-      );
-      const waLink = `https://wa.me/966541796684?text=${waText}`;
+
+      sessionSuggestions.push({
+        trade_name: payload.trade_name,
+        price: payload.suggested_price,
+        available: payload.suggested_available,
+        submitted_by: payload.submitted_by,
+      });
+      saveSessionSuggestions();
+      updateSessionSummary();
+
       statusDiv.innerHTML =
-        '<span class="ok">✅ تم إرسال ' + (isNewProduct ? "الصنف الجديد" : "الاقتراح") + '، في انتظار موافقة الصيدلي.</span>' +
-        '<br><a href="' + waLink + '" target="_blank" style="display:inline-block;margin-top:10px;background:#25D366;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;">📲 بلّغ الصيدلي على واتساب</a>';
+        '<span class="ok">✅ تم إرسال ' + (isNewProduct ? "الصنف الجديد" : "الاقتراح") +
+        ' (اقتراح رقم ' + sessionSuggestions.length + ' اليوم). لما تخلص كل الأصناف، دوس زرار الواتساب تحت.</span>';
       formDiv.style.display = "none";
       selectedProduct = null;
       isNewProduct = false;
