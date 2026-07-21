@@ -7,6 +7,7 @@
 <style>
   body{font-family:sans-serif;background:#F6F2EA;color:#0E2A2E;padding:16px;line-height:1.6;}
   .card{background:#fff;border-radius:10px;padding:14px;margin-top:14px;border:1px solid #ddd;}
+  .card.delete-card{border:2px solid #C0392B;background:#FDEEEC;}
   .card h3{margin:0 0 4px 0;font-size:16px;}
   .card p{margin:3px 0;font-size:14px;color:#444;}
   .photos{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
@@ -20,6 +21,7 @@
   .ok{color:#2E7D55;}
   .err{color:#C0392B;}
   .empty{text-align:center;color:#888;margin-top:40px;}
+  .delete-badge{display:inline-block;background:#C0392B;color:#fff;font-size:12px;padding:3px 8px;border-radius:6px;margin-bottom:6px;}
 </style>
 </head>
 <body>
@@ -29,7 +31,7 @@
 <div id="requests"></div>
 
 <script type="module">
-  import { requireAuth, db, doc, setDoc, getDocs, collection, saveProduct } from "./firebase-config.js";
+  import { requireAuth, db, doc, setDoc, getDocs, collection, saveProduct, deleteProduct } from "./firebase-config.js";
 
   const statusDiv = document.getElementById("status");
   const requestsDiv = document.getElementById("requests");
@@ -55,7 +57,24 @@
 
     pending.forEach(r => {
       const card = document.createElement("div");
-      card.className = "card";
+      card.className = "card" + (r.suggested_delete ? " delete-card" : "");
+
+      if (r.suggested_delete) {
+        const photosHtml = (r.photos || []).map(p => `<img src="${p}">`).join("");
+        card.innerHTML = `
+          <div class="delete-badge">🗑️ طلب حذف نهائي</div>
+          <h3>${r.trade_name || r.productId}</h3>
+          <p>اقترح الحذف: ${r.submitted_by || "غير معروف"}</p>
+          <div class="photos">${photosHtml}</div>
+          <div class="row">
+            <button class="approve" data-id="${r.id}">تأكيد الحذف ✅</button>
+            <button class="reject" data-id="${r.id}">رفض ❌</button>
+          </div>
+        `;
+        requestsDiv.appendChild(card);
+        return;
+      }
+
       const photosHtml = (r.photos || []).map(p => `<img src="${p}">`).join("");
       const nameChanged = r.suggested_name && r.suggested_name !== r.trade_name;
       card.innerHTML = `
@@ -88,7 +107,11 @@
 
     try {
       if (e.target.classList.contains("approve")) {
-        if (r.is_new) {
+        if (r.suggested_delete) {
+          if (r.productId) {
+            await deleteProduct(r.productId);
+          }
+        } else if (r.is_new) {
           const slug = (r.trade_name || "item")
             .replace(/[^A-Za-z0-9\u0600-\u06FF]+/g, "-")
             .toLowerCase()
