@@ -56,6 +56,9 @@
   <label>
     <input id="available" type="checkbox" style="width:auto;display:inline-block;"> متاح في المخزون دلوقتي
   </label>
+  <label style="color:#C0392B;" id="delete-label">
+    <input id="delete-request" type="checkbox" style="width:auto;display:inline-block;"> 🗑️ اقتراح حذف هذا الصنف نهائيًا (مش موجود / اتوقف)
+  </label>
   <label>صور المنتج (لحد 3 صور)</label>
   <input id="photo1" type="file" accept="image/*" capture="environment">
   <input id="photo2" type="file" accept="image/*" capture="environment">
@@ -88,6 +91,8 @@
   const statusDiv = document.getElementById("status");
   const newProductBtn = document.getElementById("new-product-btn");
   const newFieldsDiv = document.getElementById("new-fields");
+  const deleteRequestInput = document.getElementById("delete-request");
+  const deleteLabel = document.getElementById("delete-label");
   let isNewProduct = false;
 
   function todayKey() {
@@ -147,6 +152,8 @@
     document.getElementById("photo2").value = "";
     document.getElementById("photo3").value = "";
     newFieldsDiv.style.display = "block";
+    deleteLabel.style.display = "none";
+    deleteRequestInput.checked = false;
     formDiv.style.display = "block";
     resultsDiv.innerHTML = "";
     searchBox.value = "";
@@ -157,6 +164,8 @@
     isNewProduct = false;
     selectedProduct = p;
     newFieldsDiv.style.display = "none";
+    deleteLabel.style.display = "block";
+    deleteRequestInput.checked = false;
     selectedName.textContent = p.trade_name;
     document.getElementById("name-edit").value = p.trade_name || "";
     priceInput.value = p.price || "";
@@ -175,6 +184,7 @@
     formDiv.style.display = "none";
     selectedProduct = null;
     isNewProduct = false;
+    deleteRequestInput.checked = false;
   });
 
   function compressImage(file, maxWidth = 800, maxSizeKB = 200) {
@@ -260,12 +270,16 @@
     listEl.innerHTML = "";
     sessionSuggestions.forEach((s, i) => {
       const li = document.createElement("li");
-      li.textContent = `${i + 1}. ${s.trade_name} — ${s.price} ج.م — ${s.available ? "متاح" : "غير متاح"}`;
+      li.textContent = s.delete_request
+        ? `${i + 1}. 🗑️ طلب حذف: ${s.trade_name}`
+        : `${i + 1}. ${s.trade_name} — ${s.price} ج.م — ${s.available ? "متاح" : "غير متاح"}`;
       listEl.appendChild(li);
     });
 
     const lines = sessionSuggestions.map((s, i) =>
-      `${i + 1}. ${s.trade_name} — ${s.price} ج.م — ${s.available ? "متاح" : "غير متاح"}`
+      s.delete_request
+        ? `${i + 1}. 🗑️ طلب حذف: ${s.trade_name}`
+        : `${i + 1}. ${s.trade_name} — ${s.price} ج.م — ${s.available ? "متاح" : "غير متاح"}`
     ).join("\n");
 
     const waText = encodeURIComponent(
@@ -308,6 +322,7 @@
         suggested_name: isNewProduct ? nameVal : (nameVal || selectedProduct.trade_name),
         suggested_price: Number(priceInput.value),
         suggested_available: availableInput.checked,
+        suggested_delete: isNewProduct ? false : deleteRequestInput.checked,
         photos: photos,
         submitted_by: user.email || user.uid,
         status: "pending",
@@ -325,17 +340,19 @@
         trade_name: payload.trade_name,
         price: payload.suggested_price,
         available: payload.suggested_available,
+        delete_request: payload.suggested_delete,
         submitted_by: payload.submitted_by,
       });
       saveSessionSuggestions();
       updateSessionSummary();
 
       statusDiv.innerHTML =
-        '<span class="ok">✅ تم إرسال ' + (isNewProduct ? "الصنف الجديد" : "الاقتراح") +
+        '<span class="ok">✅ تم إرسال ' + (payload.suggested_delete ? "طلب الحذف" : (isNewProduct ? "الصنف الجديد" : "الاقتراح")) +
         ' (اقتراح رقم ' + sessionSuggestions.length + ' اليوم). لما تخلص كل الأصناف، دوس زرار الواتساب تحت.</span>';
       formDiv.style.display = "none";
       selectedProduct = null;
       isNewProduct = false;
+      deleteRequestInput.checked = false;
     } catch (err) {
       statusDiv.innerHTML = '<span class="err">❌ حصل خطأ: ' + err.message + '</span>';
     }
