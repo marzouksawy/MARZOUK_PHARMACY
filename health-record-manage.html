@@ -148,7 +148,7 @@
 <script type="module">
   import { db, requireAuth } from './firebase-config.js';
   import {
-    collection, query, where, orderBy, getDocs, doc, deleteDoc
+    collection, query, where, getDocs, doc, deleteDoc
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // لازم يكون مسجل دخول (والحذف نفسه محمي بقاعدة أدمن فقط في Firestore Rules)
@@ -233,11 +233,12 @@
     try {
       const q = query(
         collection(db, 'health_records'),
-        where('patientPhone', '==', phone),
-        orderBy('date', 'desc')
+        where('patientPhone', '==', phone)
       );
       const snap = await getDocs(q);
-      currentDocs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+      currentDocs = snap.docs
+        .map(d => ({ id: d.id, data: d.data() }))
+        .sort((a, b) => (b.data.date?.toMillis?.() || 0) - (a.data.date?.toMillis?.() || 0));
       resultsCard.style.display = 'block';
       renderRecords();
     } catch (err) {
