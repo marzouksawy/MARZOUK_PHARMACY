@@ -1,5 +1,6 @@
-// search.js — منطق البحث والتصفية لصفحة المنتجات (v2.0)
-// دلوقتي بيقرأ المنتجات من Firestore بدل products.json
+// search.js — منطق البحث والتصفية لصفحة المنتجات (v2.1)
+// بيقرأ المنتجات من Firestore، وبيعرضها بشكل تدريجي (Pagination) عشان الصفحة الرئيسية
+// متبقاش طويلة جدًا لو مفيش بحث محدد (بدل ما يعرض آلاف المنتجات مرة واحدة)
 // لازم يُستورد كـ module: <script type="module" src="search.js"></script>
 
 import { fetchAllProducts, CATEGORIES } from "./firebase-config.js";
@@ -7,6 +8,12 @@ import { fetchAllProducts, CATEGORIES } from "./firebase-config.js";
 const PharmacySearch = (function () {
   let allProducts = [];
   let categories = CATEGORIES;
+  let favoritesOnly = false;
+
+  const PAGE_SIZE = 24; // عدد المنتجات المعروضة في كل دفعة
+  let currentResults = [];
+  let visibleCount = PAGE_SIZE;
+  let gridEl = null;
 
   function normalize(text) {
     return (text || "")
@@ -31,11 +38,25 @@ const PharmacySearch = (function () {
     );
   }
 
+  function getFavorites() {
+    try {
+      return JSON.parse(localStorage.getItem("marzouk_favorites") || "[]");
+    } catch {
+      return [];
+    }
+  }
+
   function search(query, categoryId) {
+    const favs = favoritesOnly ? getFavorites() : null;
     return allProducts.filter((p) => {
       const inCategory = !categoryId || categoryId === "all" || p.category === categoryId;
-      return inCategory && matches(p, query);
+      const inFavorites = !favoritesOnly || (favs && favs.includes(p.id));
+      return inCategory && inFavorites && matches(p, query);
     });
+  }
+
+  function setFavoritesOnly(val) {
+    favoritesOnly = val;
   }
 
   function getAlternatives(productId) {
@@ -49,7 +70,7 @@ const PharmacySearch = (function () {
   function renderCard(product) {
     const cat = categories.find((c) => c.id === product.category) || {};
     const thumb = product.image
-      ? `<img src="${product.image}" alt="${product.trade_name}" style="width:100%;height:100%;object-fit:contain;padding:6px;">`
+      ? `<img src="${product.image}" alt="${product.trade_name}" style="width:100%;height:100%;object-fit:contain;padding:6px;" loading="lazy">`
       : cat.icon || "💊";
     return `
       <div class="prod-card">
@@ -66,9 +87,51 @@ const PharmacySearch = (function () {
   }
 
   function renderResults(container, results) {
-    container.innerHTML = results.length
-      ? results.map(renderCard).join("")
-      : `<p class="no-results">لا توجد منتجات مطابقة لبحثك.</p>`;
+    currentResults = results;
+    visibleCount = PAGE_SIZE;
+    gridEl = container;
+    renderVisible();
+  }
+
+  function renderVisible() {
+    if (!gridEl) return;
+    const total = currentResults.length;
+    const slice = currentResults.slice(0, visibleCount);
+
+    if (total === 0) {
+      gridEl.innerHTML = `<p class="no-results">لا توجد منتجات مطابقة لبحثك.</p>`;
+      return;
+    }
+
+    let html = slice.map(renderCard).join("");
+
+    if (visibleCount < total) {
+      const remaining = total - visibleCount;
+      html += `
+        <div style="grid-column:1/-1;text-align:center;padding:20px 0;">
+          <button id="load-more-btn" style="
+            background:var(--petrol,#0F4C4F);color:#fff;border:none;
+            padding:12px 28px;border-radius:999px;font-family:'IBM Plex Sans Arabic',sans-serif;
+            font-size:14.5px;font-weight:600;cursor:pointer;">
+            عرض المزيد (${remaining} منتج متبقي)
+          </button>
+        </div>`;
+    } else if (total > PAGE_SIZE) {
+      html += `
+        <div style="grid-column:1/-1;text-align:center;padding:14px 0;color:rgba(14,42,46,0.5);font-size:13px;">
+          تم عرض كل ${total} منتج
+        </div>`;
+    }
+
+    gridEl.innerHTML = html;
+
+    const loadMoreBtn = gridEl.querySelector("#load-more-btn");
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener("click", () => {
+        visibleCount += PAGE_SIZE;
+        renderVisible();
+      });
+    }
   }
 
   async function init(inputSelector, gridSelector, categorySelector) {
@@ -101,10 +164,25 @@ const PharmacySearch = (function () {
     }
     if (catSelect) catSelect.addEventListener("change", runSearch);
 
+    // إتاحة إعادة البحث من الخارج (زي فلاتر الفئات والمفضلة في home-widgets.js)
+    PharmacySearch.setCategory = (catId) => {
+      if (catSelect) catSelect.value = catId;
+      runSearchWithCategory(catId);
+    };
+    function runSearchWithCategory(catId) {
+      const query = input ? input.value : "";
+      renderResults(grid, search(query, catId));
+    }
+    PharmacySearch._runSearch = runSearch;
+    PharmacySearch.setFavoritesOnly = (val) => {
+      setFavoritesOnly(val);
+      runSearch();
+    };
+
     runSearch();
   }
 
-  return { init, search, getAlternatives, normalize };
+  return { init, search, getAlternatives, normalize, setFavoritesOnly };
 })();
 
 window.PharmacySearch = PharmacySearch;
