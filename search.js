@@ -106,14 +106,13 @@ const PharmacySearch = (function () {
     let html = slice.map(renderCard).join("");
 
     if (visibleCount < total) {
-      const remaining = total - visibleCount;
       html += `
         <div style="grid-column:1/-1;text-align:center;padding:20px 0;">
           <button id="load-more-btn" style="
             background:var(--petrol,#0F4C4F);color:#fff;border:none;
             padding:12px 28px;border-radius:999px;font-family:'IBM Plex Sans Arabic',sans-serif;
             font-size:14.5px;font-weight:600;cursor:pointer;">
-            عرض المزيد (${remaining} منتج متبقي)
+            عرض المزيد
           </button>
         </div>`;
     } else if (total > PAGE_SIZE) {
