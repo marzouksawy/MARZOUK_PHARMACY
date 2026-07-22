@@ -229,14 +229,10 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { db } from './firebase-config.js';
   import {
-    getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, Timestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { firebaseConfig } from './firebase-config.js';
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    collection, addDoc, query, where, orderBy, limit, getDocs, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const patientName = document.getElementById('patientName');
   const patientPhone = document.getElementById('patientPhone');
