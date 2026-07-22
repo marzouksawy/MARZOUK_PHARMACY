@@ -76,11 +76,7 @@
     <label>الشكل الدوائي (أقراص، شراب، حقن...)</label>
     <input id="new-form" type="text">
     <label>الفئة</label>
-    <select id="new-category">
-      <option value="drugs">💊 أدوية</option>
-      <option value="supplements">🌿 فيتامينات ومكملات</option>
-      <option value="care">🩹 عناية ومستلزمات طبية</option>
-    </select>
+    <select id="new-category"></select>
   </div>
   <label>السعر المقترح (جنيه)</label>
   <input id="price" type="number" placeholder="مثال: 45">
@@ -188,6 +184,7 @@
   statusDiv.innerHTML = '<span class="ok">تم تحميل ' + allProducts.length + ' صنف.</span>';
   updateSessionSummary();
   setupBrowseCategories();
+  setupNewCategorySelect();
 
   searchBox.addEventListener("input", () => {
     const term = searchBox.value.trim().toUpperCase();
@@ -222,6 +219,17 @@
     closeBrowsePanel();
     formDiv.scrollIntoView({ behavior: "smooth" });
   });
+
+  function setupNewCategorySelect() {
+    const select = document.getElementById("new-category");
+    select.innerHTML = "";
+    (CATEGORIES || []).forEach((cat) => {
+      const opt = document.createElement("option");
+      opt.value = cat.id;
+      opt.textContent = `${cat.icon || ""} ${cat.name}`.trim();
+      select.appendChild(opt);
+    });
+  }
 
   // ===== منطق وضع التصفح الكامل =====
   function setupBrowseCategories() {
