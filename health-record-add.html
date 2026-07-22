@@ -261,6 +261,14 @@
     return phone.trim().replace(/[^0-9]/g, '');
   }
 
+  function normalizeName(name) {
+    return name.trim().replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  function makePatientKey(name, phone) {
+    return normalizeName(name) + '_' + normalizePhone(phone);
+  }
+
   // البحث عن آخر قياس مسجل لنفس الرقم
   searchBtn.addEventListener('click', async () => {
     const phone = normalizePhone(patientPhone.value);
@@ -318,6 +326,7 @@
     const record = {
       patientName: name,
       patientPhone: phone,
+      patientKey: makePatientKey(name, phone),
       date: Timestamp.now(),
       systolic: document.getElementById('systolic').value ? Number(document.getElementById('systolic').value) : null,
       diastolic: document.getElementById('diastolic').value ? Number(document.getElementById('diastolic').value) : null,
