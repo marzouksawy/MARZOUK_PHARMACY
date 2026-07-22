@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل قياس صحي جديد | صيدلية د. مرزوق الصاوي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0F4C4F;
+    --cream: #F6F2EA;
+    --paper: #FFFEFB;
+    --amber: #D98C4A;
+    --text: #1E2B2B;
+    --danger: #B3423E;
+    --success: #2E7D5B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    padding: 16px;
+    padding-bottom: 60px;
+  }
+  header {
+    background: var(--teal);
+    color: var(--paper);
+    padding: 18px 16px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  header h1 { font-size: 19px; font-weight: 700; }
+  header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+
+  .card {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(15,76,79,0.08);
+  }
+  .card h2 {
+    font-size: 15px;
+    color: var(--teal);
+    margin-bottom: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #4A5757;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid #DDD6C7;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    background: #FFFFFF;
+    margin-bottom: 14px;
+  }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--teal);
+  }
+  .row2 { display: flex; gap: 10px; }
+  .row2 > div { flex: 1; }
+
+  .patient-found {
+    background: #EAF3EF;
+    border: 1px solid var(--success);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .patient-found.show { display: block; }
+
+  .history-mini {
+    font-size: 12px;
+    color: #6B7878;
+    margin-top: 4px;
+  }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-search {
+    background: var(--teal);
+    color: var(--paper);
+    margin-bottom: 6px;
+  }
+  .btn-save {
+    background: var(--amber);
+    color: var(--paper);
+  }
+  .btn-save:disabled { opacity: 0.5; }
+
+  .section-optional {
+    border-top: 1px dashed #DDD6C7;
+    margin-top: 6px;
+    padding-top: 14px;
+  }
+  .toggle-inbody {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--teal);
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+  .toggle-inbody input { width: auto; margin: 0; }
+
+  #inbodyFields { display: none; }
+  #inbodyFields.show { display: block; }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--success);
+    color: white;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: transform 0.3s ease;
+    z-index: 50;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.error { background: var(--danger); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🩺 تسجيل قياس صحي جديد</h1>
+  <p>صيدلية د. مرزوق الصاوي — ركن الصحة</p>
+</header>
+
+<div class="card">
+  <h2>1️⃣ بيانات الزبون</h2>
+  <label>اسم الزبون</label>
+  <input type="text" id="patientName" placeholder="مثال: أحمد محمد علي">
+
+  <label>رقم الموبايل</label>
+  <input type="tel" id="patientPhone" placeholder="01xxxxxxxxx" inputmode="numeric">
+
+  <button class="btn-search" id="searchBtn">🔍 بحث عن سجل سابق</button>
+
+  <div class="patient-found" id="patientFound"></div>
+</div>
+
+<div class="card">
+  <h2>2️⃣ القياسات الأساسية</h2>
+
+  <div class="row2">
+    <div>
+      <label>ضغط الدم - انقباضي</label>
+      <input type="number" id="systolic" placeholder="120">
+    </div>
+    <div>
+      <label>ضغط الدم - انبساطي</label>
+      <input type="number" id="diastolic" placeholder="80">
+    </div>
+  </div>
+
+  <div class="row2">
+    <div>
+      <label>سكر الدم (mg/dL)</label>
+      <input type="number" id="bloodSugar" placeholder="100">
+    </div>
+    <div>
+      <label>الوزن (كجم)</label>
+      <input type="number" step="0.1" id="weight" placeholder="70">
+    </div>
+  </div>
+
+  <div class="section-optional">
+    <label class="toggle-inbody">
+      <input type="checkbox" id="inbodyToggle">
+      ⚖️ إضافة نتائج InBody (تحليل تكوين الجسم)
+    </label>
+
+    <div id="inbodyFields">
+      <div class="row2">
+        <div>
+          <label>نسبة الدهون %</label>
+          <input type="number" step="0.1" id="bodyFat" placeholder="22.5">
+        </div>
+        <div>
+          <label>نسبة العضلات %</label>
+          <input type="number" step="0.1" id="muscleMass" placeholder="38">
+        </div>
+      </div>
+      <label>الدهون الحشوية (Visceral Fat)</label>
+      <input type="number" id="visceralFat" placeholder="8">
+    </div>
+  </div>
+
+  <label>ملاحظات (اختياري)</label>
+  <textarea id="notes" rows="2" placeholder="أي ملاحظة يراها الصيدلي مهمة..."></textarea>
+
+  <button class="btn-save" id="saveBtn">💾 حفظ القياس</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { firebaseConfig } from './firebase-config.js';
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const patientName = document.getElementById('patientName');
+  const patientPhone = document.getElementById('patientPhone');
+  const searchBtn = document.getElementById('searchBtn');
+  const patientFound = document.getElementById('patientFound');
+  const inbodyToggle = document.getElementById('inbodyToggle');
+  const inbodyFields = document.getElementById('inbodyFields');
+  const saveBtn = document.getElementById('saveBtn');
+  const toast = document.getElementById('toast');
+
+  inbodyToggle.addEventListener('change', () => {
+    inbodyFields.classList.toggle('show', inbodyToggle.checked);
+  });
+
+  function showToast(msg, isError = false) {
+    toast.textContent = msg;
+    toast.classList.toggle('error', isError);
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function normalizePhone(phone) {
+    return phone.trim().replace(/[^0-9]/g, '');
+  }
+
+  // البحث عن آخر قياس مسجل لنفس الرقم
+  searchBtn.addEventListener('click', async () => {
+    const phone = normalizePhone(patientPhone.value);
+    if (!phone) {
+      showToast('اكتب رقم الموبايل أولاً', true);
+      return;
+    }
+    searchBtn.textContent = '⏳ جاري البحث...';
+    try {
+      const q = query(
+        collection(db, 'health_records'),
+        where('patientPhone', '==', phone),
+        orderBy('date', 'desc'),
+        limit(1)
+      );
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        patientFound.classList.add('show');
+        patientFound.innerHTML = `👤 زبون جديد — مفيش سجل سابق بالرقم ده.`;
+      } else {
+        const last = snap.docs[0].data();
+        const lastDate = last.date?.toDate ? last.date.toDate().toLocaleDateString('ar-EG') : '';
+        patientFound.classList.add('show');
+        patientFound.innerHTML = `
+          ✅ زبون معروف: <strong>${last.patientName || ''}</strong><br>
+          <span class="history-mini">آخر قياس بتاريخ ${lastDate}:
+          ضغط ${last.systolic || '-'}/${last.diastolic || '-'} |
+          سكر ${last.bloodSugar || '-'} | وزن ${last.weight || '-'} كجم</span>
+        `;
+        if (!patientName.value) patientName.value = last.patientName || '';
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('حصل خطأ في البحث', true);
+    }
+    searchBtn.textContent = '🔍 بحث عن سجل سابق';
+  });
+
+  // حفظ القياس الجديد
+  saveBtn.addEventListener('click', async () => {
+    const name = patientName.value.trim();
+    const phone = normalizePhone(patientPhone.value);
+
+    if (!name || !phone) {
+      showToast('لازم تدخل اسم الزبون ورقم الموبايل', true);
+      return;
+    }
+    if (phone.length < 10) {
+      showToast('رقم الموبايل غير صحيح', true);
+      return;
+    }
+
+    const record = {
+      patientName: name,
+      patientPhone: phone,
+      date: Timestamp.now(),
+      systolic: document.getElementById('systolic').value ? Number(document.getElementById('systolic').value) : null,
+      diastolic: document.getElementById('diastolic').value ? Number(document.getElementById('diastolic').value) : null,
+      bloodSugar: document.getElementById('bloodSugar').value ? Number(document.getElementById('bloodSugar').value) : null,
+      weight: document.getElementById('weight').value ? Number(document.getElementById('weight').value) : null,
+      notes: document.getElementById('notes').value.trim() || null,
+      hasInbody: inbodyToggle.checked
+    };
+
+    if (inbodyToggle.checked) {
+      record.bodyFat = document.getElementById('bodyFat').value ? Number(document.getElementById('bodyFat').value) : null;
+      record.muscleMass = document.getElementById('muscleMass').value ? Number(document.getElementById('muscleMass').value) : null;
+      record.visceralFat = document.getElementById('visceralFat').value ? Number(document.getElementById('visceralFat').value) : null;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ جاري الحفظ...';
+
+    try {
+      await addDoc(collection(db, 'health_records'), record);
+      showToast('✅ تم حفظ القياس بنجاح');
+      // تفريغ الحقول القابلة للتكرار بس نسيب بيانات الزبون
+      document.getElementById('systolic').value = '';
+      document.getElementById('diastolic').value = '';
+      document.getElementById('bloodSugar').value = '';
+      document.getElementById('weight').value = '';
+      document.getElementById('bodyFat').value = '';
+      document.getElementById('muscleMass').value = '';
+      document.getElementById('visceralFat').value = '';
+      document.getElementById('notes').value = '';
+    } catch (err) {
+      console.error(err);
+      showToast('حصل خطأ أثناء الحفظ، حاول تاني', true);
+    }
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 حفظ القياس';
+  });
+</script>
+
+</body>
+</html>
