@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة السجلات الصحية | صيدلية د. مرزوق الصاوي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0F4C4F;
+    --cream: #F6F2EA;
+    --paper: #FFFEFB;
+    --amber: #D98C4A;
+    --text: #1E2B2B;
+    --danger: #B3423E;
+    --success: #2E7D5B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    padding: 16px;
+    padding-bottom: 60px;
+  }
+  header {
+    background: var(--teal);
+    color: var(--paper);
+    padding: 18px 16px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  header h1 { font-size: 18px; font-weight: 700; }
+
+  .card {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(15,76,79,0.08);
+  }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #4A5757; }
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid #DDD6C7;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    background: #fff;
+    margin-bottom: 12px;
+  }
+  button {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-search { background: var(--teal); color: var(--paper); }
+  .btn-danger-all {
+    background: var(--danger);
+    color: var(--paper);
+    margin-top: 10px;
+    display: none;
+  }
+  .btn-danger-all.show { display: block; }
+
+  .patient-header {
+    display: none;
+    background: #EAF3EF;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teal);
+    margin-bottom: 10px;
+  }
+  .patient-header.show { display: block; }
+
+  .record {
+    border: 1px solid #EEE7D8;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .record .date { font-weight: 700; color: var(--teal); margin-bottom: 6px; }
+  .record .vals { color: #4A5757; line-height: 1.8; }
+  .record .del-btn {
+    background: #FBEAE9;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    padding: 20px;
+    display: none;
+  }
+  .empty-state.show { display: block; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--success); color: white;
+    padding: 12px 22px; border-radius: 10px; font-size: 14px;
+    font-weight: 500; transition: transform 0.3s ease; z-index: 50;
+    max-width: 90%; text-align: center;
+  }
+  .toast.error { background: var(--danger); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗂️ إدارة السجلات الصحية</h1>
+</header>
+
+<div class="card">
+  <label>رقم موبايل الزبون</label>
+  <input type="tel" id="searchPhone" placeholder="01xxxxxxxxx" inputmode="numeric">
+  <button class="btn-search" id="searchBtn">🔍 عرض سجل الزبون</button>
+</div>
+
+<div class="card" id="resultsCard" style="display:none;">
+  <div class="patient-header" id="patientHeader"></div>
+  <div id="recordsList"></div>
+  <div class="empty-state" id="emptyState">مفيش سجلات لهذا الرقم</div>
+  <button class="btn-danger-all" id="deleteAllBtn">🗑️ حذف كل سجل الزبون نهائيًا</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { db, requireAuth } from './firebase-config.js';
+  import {
+    collection, query, where, orderBy, getDocs, doc, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // لازم يكون مسجل دخول (والحذف نفسه محمي بقاعدة أدمن فقط في Firestore Rules)
+  requireAuth('admin-login.html');
+
+  const searchPhone = document.getElementById('searchPhone');
+  const searchBtn = document.getElementById('searchBtn');
+  const resultsCard = document.getElementById('resultsCard');
+  const patientHeader = document.getElementById('patientHeader');
+  const recordsList = document.getElementById('recordsList');
+  const emptyState = document.getElementById('emptyState');
+  const deleteAllBtn = document.getElementById('deleteAllBtn');
+  const toast = document.getElementById('toast');
+
+  let currentDocs = []; // {id, data}
+
+  function showToast(msg, isError = false) {
+    toast.textContent = msg;
+    toast.classList.toggle('error', isError);
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function normalizePhone(phone) {
+    return phone.trim().replace(/[^0-9]/g, '');
+  }
+
+  function renderRecords() {
+    recordsList.innerHTML = '';
+    if (currentDocs.length === 0) {
+      emptyState.classList.add('show');
+      deleteAllBtn.classList.remove('show');
+      patientHeader.classList.remove('show');
+      return;
+    }
+    emptyState.classList.remove('show');
+    deleteAllBtn.classList.add('show');
+
+    const name = currentDocs[0].data.patientName || '';
+    patientHeader.classList.add('show');
+    patientHeader.textContent = `👤 ${name} — عدد السجلات: ${currentDocs.length}`;
+
+    currentDocs.forEach(({ id, data }) => {
+      const dt = data.date?.toDate ? data.date.toDate().toLocaleDateString('ar-EG') : '';
+      const div = document.createElement('div');
+      div.className = 'record';
+      div.innerHTML = `
+        <div class="date">📅 ${dt}</div>
+        <div class="vals">
+          ضغط: ${data.systolic || '-'}/${data.diastolic || '-'} |
+          سكر: ${data.bloodSugar || '-'} |
+          وزن: ${data.weight || '-'} كجم
+          ${data.hasInbody ? `<br>دهون: ${data.bodyFat || '-'}% | عضلات: ${data.muscleMass || '-'}%` : ''}
+          ${data.notes ? `<br>ملاحظات: ${data.notes}` : ''}
+        </div>
+        <button class="del-btn" data-id="${id}">🗑️ حذف هذا القياس فقط</button>
+      `;
+      recordsList.appendChild(div);
+    });
+
+    document.querySelectorAll('.del-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('متأكد إنك عايز تحذف القياس ده؟ الإجراء ده نهائي.')) return;
+        try {
+          await deleteDoc(doc(db, 'health_records', btn.dataset.id));
+          currentDocs = currentDocs.filter(r => r.id !== btn.dataset.id);
+          renderRecords();
+          showToast('✅ تم حذف القياس');
+        } catch (err) {
+          console.error(err);
+          showToast('حصل خطأ أثناء الحذف — تأكد إنك مسجل دخول بحساب أدمن', true);
+        }
+      });
+    });
+  }
+
+  searchBtn.addEventListener('click', async () => {
+    const phone = normalizePhone(searchPhone.value);
+    if (!phone) { showToast('اكتب رقم الموبايل', true); return; }
+
+    searchBtn.textContent = '⏳ جاري البحث...';
+    try {
+      const q = query(
+        collection(db, 'health_records'),
+        where('patientPhone', '==', phone),
+        orderBy('date', 'desc')
+      );
+      const snap = await getDocs(q);
+      currentDocs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+      resultsCard.style.display = 'block';
+      renderRecords();
+    } catch (err) {
+      console.error(err);
+      showToast('حصل خطأ في البحث', true);
+    }
+    searchBtn.textContent = '🔍 عرض سجل الزبون';
+  });
+
+  deleteAllBtn.addEventListener('click', async () => {
+    const name = currentDocs[0]?.data.patientName || '';
+    if (!confirm(`متأكد إنك عايز تحذف كل سجلات "${name}" نهائيًا؟ (${currentDocs.length} قياس)؟ الإجراء ده لا يمكن التراجع عنه.`)) return;
+
+    deleteAllBtn.disabled = true;
+    deleteAllBtn.textContent = '⏳ جاري الحذف...';
+    try {
+      for (const r of currentDocs) {
+        await deleteDoc(doc(db, 'health_records', r.id));
+      }
+      currentDocs = [];
+      renderRecords();
+      showToast('✅ تم حذف كل سجلات الزبون');
+    } catch (err) {
+      console.error(err);
+      showToast('حصل خطأ أثناء الحذف — تأكد إنك مسجل دخول بحساب أدمن', true);
+    }
+    deleteAllBtn.disabled = false;
+    deleteAllBtn.textContent = '🗑️ حذف كل سجل الزبون نهائيًا';
+  });
+</script>
+
+</body>
+</html>
