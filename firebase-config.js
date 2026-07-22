@@ -62,8 +62,11 @@ export { auth };
 // تصنيفات ثابتة (نادرًا ما تتغير، فمش محتاجة قاعدة بيانات)
 export const CATEGORIES = [
   { id: "drugs", name: "أدوية", icon: "💊", color: "#0F4C4F" },
-  { id: "supplements", name: "فيتامينات ومكملات", icon: "🌿", color: "#D98C4A" },
-  { id: "care", name: "عناية ومستلزمات طبية", icon: "🩹", color: "#7A6A8A" },
+  { id: "supplements", name: "فيتامينات ومكملات غذائية", icon: "🌿", color: "#D98C4A" },
+  { id: "skincare", name: "العناية بالبشرة الطبية", icon: "🧴", color: "#C77B5B" },
+  { id: "baby", name: "عناية الطفل والأم", icon: "🍼", color: "#7A9EA8" },
+  { id: "medical_supplies", name: "مستلزمات طبية", icon: "🩹", color: "#7A6A8A" },
+  { id: "personal_care", name: "العناية الشخصية", icon: "🧼", color: "#8A9A5B" },
 ];
 
 // جلب كل المنتجات من Firestore
