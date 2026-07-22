@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سجلي الصحي | صيدلية د. مرزوق الصاوي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0F4C4F;
+    --cream: #F6F2EA;
+    --paper: #FFFEFB;
+    --amber: #D98C4A;
+    --text: #1E2B2B;
+    --danger: #B3423E;
+    --success: #2E7D5B;
+    --blue: #3B6E8F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    padding: 16px;
+    padding-bottom: 60px;
+  }
+  header {
+    background: var(--teal);
+    color: var(--paper);
+    padding: 20px 16px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  header h1 { font-size: 20px; font-weight: 700; }
+  header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+
+  .card {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(15,76,79,0.08);
+  }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #4A5757; }
+  input {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid #DDD6C7;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 15px;
+    background: #fff;
+    margin-bottom: 12px;
+  }
+  button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--teal);
+    color: var(--paper);
+  }
+
+  .error-msg {
+    background: #FBEAE9;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+    text-align: center;
+  }
+  .error-msg.show { display: block; }
+
+  #resultsSection { display: none; }
+  #resultsSection.show { display: block; }
+
+  .patient-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--teal);
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  .chart-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--teal);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chart-wrap { overflow-x: auto; margin-bottom: 18px; }
+  svg { display: block; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-top: 8px;
+  }
+  th, td {
+    padding: 8px 6px;
+    text-align: center;
+    border-bottom: 1px solid #EEE7D8;
+  }
+  th { color: #4A5757; font-weight: 700; background: #F9F6EF; }
+
+  .empty-state {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    padding: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📈 سجلي الصحي</h1>
+  <p>صيدلية د. مرزوق الصاوي — ركن الصحة</p>
+</header>
+
+<div class="card" id="loginCard">
+  <label>الاسم بالكامل</label>
+  <input type="text" id="pName" placeholder="اكتب اسمك كما هو مسجل في الصيدلية">
+
+  <label>رقم الموبايل</label>
+  <input type="tel" id="pPhone" placeholder="01xxxxxxxxx" inputmode="numeric">
+
+  <button id="viewBtn">🔍 عرض سجلي الصحي</button>
+
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<div id="resultsSection">
+  <div class="card">
+    <div class="patient-name" id="patientNameDisplay"></div>
+    <div id="chartsContainer"></div>
+  </div>
+
+  <div class="card">
+    <div class="chart-title">🗂️ كل القياسات</div>
+    <div id="tableContainer"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { db } from './firebase-config.js';
+  import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const pName = document.getElementById('pName');
+  const pPhone = document.getElementById('pPhone');
+  const viewBtn = document.getElementById('viewBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const resultsSection = document.getElementById('resultsSection');
+  const patientNameDisplay = document.getElementById('patientNameDisplay');
+  const chartsContainer = document.getElementById('chartsContainer');
+  const tableContainer = document.getElementById('tableContainer');
+
+  function normalizePhone(phone) { return phone.trim().replace(/[^0-9]/g, ''); }
+  function normalizeName(name) { return name.trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function makeKey(name, phone) { return normalizeName(name) + '_' + normalizePhone(phone); }
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('show');
+  }
+  function hideError() { errorMsg.classList.remove('show'); }
+
+  // رسم بياني بسيط SVG لمقياس واحد بمرور الوقت
+  function drawLineChart(title, unit, points, color, minRef, maxRef) {
+    const w = Math.max(320, points.length * 60);
+    const h = 140;
+    const padL = 20, padR = 20, padT = 20, padB = 26;
+    const values = points.map(p => p.y).filter(v => v != null);
+    if (values.length === 0) return '';
+
+    let minV = Math.min(...values), maxV = Math.max(...values);
+    if (minRef != null) minV = Math.min(minV, minRef);
+    if (maxRef != null) maxV = Math.max(maxV, maxRef);
+    if (minV === maxV) { minV -= 5; maxV += 5; }
+    const pad = (maxV - minV) * 0.2;
+    minV -= pad; maxV += pad;
+
+    const xStep = points.length > 1 ? (w - padL - padR) / (points.length - 1) : 0;
+    const yScale = (v) => h - padB - ((v - minV) / (maxV - minV)) * (h - padT - padB);
+    const xScale = (i) => padL + i * xStep;
+
+    let path = '';
+    let dots = '';
+    let labels = '';
+    points.forEach((p, i) => {
+      if (p.y == null) return;
+      const x = xScale(i), y = yScale(p.y);
+      path += (path === '' ? 'M' : 'L') + x + ',' + y + ' ';
+      dots += `<circle cx="${x}" cy="${y}" r="3.5" fill="${color}" />`;
+      labels += `<text x="${x}" y="${h - 6}" font-size="9" fill="#999" text-anchor="middle">${p.label}</text>`;
+      dots += `<text x="${x}" y="${y - 8}" font-size="10" fill="${color}" text-anchor="middle" font-weight="700">${p.y}</text>`;
+    });
+
+    return `
+      <div class="chart-title">${title} <span style="color:#999;font-weight:400;font-size:12px;">(${unit})</span></div>
+      <div class="chart-wrap">
+        <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+          <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5" />
+          ${dots}
+          ${labels}
+        </svg>
+      </div>
+    `;
+  }
+
+  function render(records, name) {
+    patientNameDisplay.textContent = `👤 ${name}`;
+
+    const sorted = [...records].sort((a, b) => (a.date?.toMillis?.() || 0) - (b.date?.toMillis?.() || 0));
+    const fmt = (d) => d?.toDate ? d.toDate().toLocaleDateString('ar-EG', { day: 'numeric', month: 'numeric' }) : '';
+
+    const sysPoints = sorted.map(r => ({ y: r.systolic, label: fmt(r.date) }));
+    const diaPoints = sorted.map(r => ({ y: r.diastolic, label: fmt(r.date) }));
+    const sugarPoints = sorted.map(r => ({ y: r.bloodSugar, label: fmt(r.date) }));
+    const weightPoints = sorted.map(r => ({ y: r.weight, label: fmt(r.date) }));
+
+    let chartsHtml = '';
+    if (sysPoints.some(p => p.y != null)) chartsHtml += drawLineChart('ضغط الدم - انقباضي', 'mmHg', sysPoints, '#B3423E', 90, 140);
+    if (diaPoints.some(p => p.y != null)) chartsHtml += drawLineChart('ضغط الدم - انبساطي', 'mmHg', diaPoints, '#3B6E8F', 60, 90);
+    if (sugarPoints.some(p => p.y != null)) chartsHtml += drawLineChart('سكر الدم', 'mg/dL', sugarPoints, '#D98C4A', 70, 140);
+    if (weightPoints.some(p => p.y != null)) chartsHtml += drawLineChart('الوزن', 'كجم', weightPoints, '#2E7D5B', null, null);
+
+    chartsContainer.innerHTML = chartsHtml || '<div class="empty-state">مفيش قياسات كفاية للرسم البياني</div>';
+
+    const descSorted = [...records].sort((a, b) => (b.date?.toMillis?.() || 0) - (a.date?.toMillis?.() || 0));
+    let rows = descSorted.map(r => {
+      const dt = r.date?.toDate ? r.date.toDate().toLocaleDateString('ar-EG') : '';
+      return `<tr>
+        <td>${dt}</td>
+        <td>${r.systolic || '-'}/${r.diastolic || '-'}</td>
+        <td>${r.bloodSugar || '-'}</td>
+        <td>${r.weight || '-'}</td>
+      </tr>`;
+    }).join('');
+
+    tableContainer.innerHTML = `
+      <table>
+        <thead><tr><th>التاريخ</th><th>الضغط</th><th>السكر</th><th>الوزن</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    resultsSection.classList.add('show');
+  }
+
+  viewBtn.addEventListener('click', async () => {
+    hideError();
+    const name = pName.value.trim();
+    const phone = pPhone.value.trim();
+
+    if (!name || !phone) {
+      showError('من فضلك اكتب الاسم ورقم الموبايل');
+      return;
+    }
+
+    viewBtn.textContent = '⏳ جاري البحث...';
+    viewBtn.disabled = true;
+
+    try {
+      const key = makeKey(name, phone);
+      const q = query(collection(db, 'health_records'), where('patientKey', '==', key));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        showError('مفيش سجل بهذا الاسم ورقم الموبايل. تأكد إنك كاتب اسمك بالظبط زي ما هو مسجل في الصيدلية.');
+        resultsSection.classList.remove('show');
+      } else {
+        const records = snap.docs.map(d => d.data());
+        render(records, records[0].patientName);
+      }
+    } catch (err) {
+      console.error(err);
+      showError('حصل خطأ أثناء البحث، حاول تاني');
+    }
+
+    viewBtn.textContent = '🔍 عرض سجلي الصحي';
+    viewBtn.disabled = false;
+  });
+</script>
+
+</body>
+</html>
