@@ -231,7 +231,7 @@
 <script type="module">
   import { db, requireAuth } from './firebase-config.js';
   import {
-    collection, addDoc, query, where, orderBy, limit, getDocs, Timestamp
+    collection, addDoc, query, where, getDocs, Timestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // لازم يكون المساعد/الصيدلي مسجل دخول قبل ما يقدر يستخدم الشاشة دي
@@ -272,16 +272,18 @@
     try {
       const q = query(
         collection(db, 'health_records'),
-        where('patientPhone', '==', phone),
-        orderBy('date', 'desc'),
-        limit(1)
+        where('patientPhone', '==', phone)
       );
       const snap = await getDocs(q);
       if (snap.empty) {
         patientFound.classList.add('show');
         patientFound.innerHTML = `👤 زبون جديد — مفيش سجل سابق بالرقم ده.`;
       } else {
-        const last = snap.docs[0].data();
+        // ترتيب النتايج بالتاريخ الأحدث أولاً هنا في الكود بدل Firestore
+        const sorted = snap.docs
+          .map(d => d.data())
+          .sort((a, b) => (b.date?.toMillis?.() || 0) - (a.date?.toMillis?.() || 0));
+        const last = sorted[0];
         const lastDate = last.date?.toDate ? last.date.toDate().toLocaleDateString('ar-EG') : '';
         patientFound.classList.add('show');
         patientFound.innerHTML = `
