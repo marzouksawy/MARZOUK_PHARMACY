@@ -39,6 +39,14 @@
   #crop-actions{display:flex;gap:10px;margin-top:14px;width:100%;max-width:400px;}
   #crop-actions button{flex:1;margin-top:0;}
   .photo-note{font-size:12px;font-weight:normal;color:#777;margin-top:2px;}
+  #browse-toggle-btn{background:#0F4C4F;}
+  #browse-panel{display:none;margin-top:12px;background:#fff;border-radius:10px;padding:12px;border:1px solid #ddd;}
+  #browse-categories{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .chip{background:#F6F2EA;color:#0E2A2E;border:1px solid #ccc;padding:7px 13px;border-radius:999px;font-size:13px;cursor:pointer;white-space:nowrap;margin-top:0;}
+  .chip.active{background:#0F4C4F;color:#fff;border-color:#0F4C4F;}
+  #browse-results{max-height:none;}
+  #browse-more-btn{display:none;width:100%;background:#D98C4A;}
+  #browse-empty{font-size:13px;color:#777;padding:10px 0;display:none;}
 </style>
 </head>
 <body>
@@ -46,7 +54,15 @@
 <p>دور على الصنف، اقترح السعر والتوفر وارفع صور — التعديل هيتراجع من الصيدلي قبل ما يظهر للزبون.</p>
 <input id="search" type="text" placeholder="ابحث بالاسم التجاري...">
 <button id="new-product-btn" style="background:#D98C4A;">➕ صنف جديد مش موجود في القائمة</button>
+<button id="browse-toggle-btn">📂 تصفح كل الأصناف</button>
 <div id="results"></div>
+
+<div id="browse-panel">
+  <div id="browse-categories"></div>
+  <div id="browse-results"></div>
+  <p id="browse-empty">مفيش أصناف في القسم ده.</p>
+  <button id="browse-more-btn">عرض المزيد</button>
+</div>
 
 <div id="form">
   <h3 id="selected-name"></h3>
@@ -111,7 +127,7 @@
 </div>
 
 <script type="module">
-  import { requireAuth, fetchAllProducts, db, doc, setDoc, collection, auth } from "./firebase-config.js";
+  import { requireAuth, fetchAllProducts, db, doc, setDoc, collection, auth, CATEGORIES } from "./firebase-config.js";
 
   const searchBox = document.getElementById("search");
   const resultsDiv = document.getElementById("results");
@@ -128,6 +144,19 @@
   const deleteRequestInput = document.getElementById("delete-request");
   const deleteLabel = document.getElementById("delete-label");
   let isNewProduct = false;
+
+  // ===== عناصر وضع التصفح الكامل =====
+  const browseToggleBtn = document.getElementById("browse-toggle-btn");
+  const browsePanel = document.getElementById("browse-panel");
+  const browseCategoriesDiv = document.getElementById("browse-categories");
+  const browseResultsDiv = document.getElementById("browse-results");
+  const browseMoreBtn = document.getElementById("browse-more-btn");
+  const browseEmptyP = document.getElementById("browse-empty");
+
+  const BROWSE_PAGE_SIZE = 24;
+  let browseCategory = "all";
+  let browsePage = 1;
+  let browseOpen = false;
 
   function todayKey() {
     const d = new Date();
@@ -158,11 +187,13 @@
   let selectedProduct = null;
   statusDiv.innerHTML = '<span class="ok">تم تحميل ' + allProducts.length + ' صنف.</span>';
   updateSessionSummary();
+  setupBrowseCategories();
 
   searchBox.addEventListener("input", () => {
     const term = searchBox.value.trim().toUpperCase();
     resultsDiv.innerHTML = "";
     if (!term) return;
+    closeBrowsePanel();
     const filtered = allProducts.filter(p => (p.trade_name || "").toUpperCase().includes(term)).slice(0, 25);
     filtered.forEach(p => {
       const card = document.createElement("div");
@@ -188,7 +219,95 @@
     formDiv.style.display = "block";
     resultsDiv.innerHTML = "";
     searchBox.value = "";
+    closeBrowsePanel();
     formDiv.scrollIntoView({ behavior: "smooth" });
+  });
+
+  // ===== منطق وضع التصفح الكامل =====
+  function setupBrowseCategories() {
+    browseCategoriesDiv.innerHTML = "";
+    const allChip = document.createElement("button");
+    allChip.type = "button";
+    allChip.className = "chip active";
+    allChip.textContent = "الكل";
+    allChip.addEventListener("click", () => setBrowseCategory("all", allChip));
+    browseCategoriesDiv.appendChild(allChip);
+
+    (CATEGORIES || []).forEach((cat) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip";
+      chip.textContent = `${cat.icon || ""} ${cat.name}`.trim();
+      chip.addEventListener("click", () => setBrowseCategory(cat.id, chip));
+      browseCategoriesDiv.appendChild(chip);
+    });
+  }
+
+  function setBrowseCategory(catId, chipEl) {
+    browseCategory = catId;
+    browsePage = 1;
+    browseCategoriesDiv.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
+    chipEl.classList.add("active");
+    renderBrowseResults();
+  }
+
+  function getBrowseFiltered() {
+    if (browseCategory === "all") return allProducts;
+    return allProducts.filter((p) => p.category === browseCategory);
+  }
+
+  function renderBrowseResults() {
+    const filtered = getBrowseFiltered();
+    const visible = filtered.slice(0, browsePage * BROWSE_PAGE_SIZE);
+    browseResultsDiv.innerHTML = "";
+
+    if (filtered.length === 0) {
+      browseEmptyP.style.display = "block";
+      browseMoreBtn.style.display = "none";
+      return;
+    }
+    browseEmptyP.style.display = "none";
+
+    visible.forEach((p) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<h3>${p.trade_name || "بدون اسم"}</h3><p>${p.active_ingredient || ""} ${p.dosage_form ? "— " + p.dosage_form : ""}</p>`;
+      card.addEventListener("click", () => {
+        selectProduct(p);
+        closeBrowsePanel();
+      });
+      browseResultsDiv.appendChild(card);
+    });
+
+    browseMoreBtn.style.display = visible.length < filtered.length ? "block" : "none";
+  }
+
+  browseMoreBtn.addEventListener("click", () => {
+    browsePage += 1;
+    renderBrowseResults();
+  });
+
+  function openBrowsePanel() {
+    browseOpen = true;
+    browsePanel.style.display = "block";
+    resultsDiv.innerHTML = "";
+    searchBox.value = "";
+    browsePage = 1;
+    renderBrowseResults();
+    browsePanel.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function closeBrowsePanel() {
+    browseOpen = false;
+    browsePanel.style.display = "none";
+  }
+
+  browseToggleBtn.addEventListener("click", () => {
+    if (browseOpen) {
+      closeBrowsePanel();
+    } else {
+      openBrowsePanel();
+    }
   });
 
   function selectProduct(p) {
