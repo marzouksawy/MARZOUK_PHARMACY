@@ -57,6 +57,35 @@ export function requireAuth(redirectTo = "admin-login.html") {
   });
 }
 
+// ===== جلب صلاحية (role) الموظف من مجموعة staff =====
+// بيرجع الـ role كنص ("assistant", "pharmacist", ...) أو null لو الموظف مش موجود في المجموعة
+export async function getStaffRole(uid) {
+  const ref = doc(db, "staff", uid);
+  const snap = await getDoc(ref);
+  return snap.exists() ? snap.data().role || null : null;
+}
+
+// حماية صفحة الأدمن: لازم يكون مسجّل دخول وصلاحيته ضمن الأدوار المسموحة
+// افتراضيًا بيسمح لأي حد role بتاعه مش "assistant" (يعني الصيدلي/المالك)
+// لو الموظف assistant بيتحول لـ suggest-edit.html بدل ما يدخل اللوحة
+export function requireAdminAuth(options = {}) {
+  const { loginRedirect = "admin-login.html", assistantRedirect = "suggest-edit.html" } = options;
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = loginRedirect;
+        return;
+      }
+      const role = await getStaffRole(user.uid);
+      if (role === "assistant") {
+        window.location.href = assistantRedirect;
+        return;
+      }
+      resolve(user);
+    });
+  });
+}
+
 export { auth };
 
 // تصنيفات ثابتة (نادرًا ما تتغير، فمش محتاجة قاعدة بيانات)
