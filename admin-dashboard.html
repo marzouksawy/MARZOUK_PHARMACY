@@ -208,12 +208,13 @@
 </div>
 
 <script type="module">
-  import { requireAuth, logout, fetchAllProducts, saveProduct, deleteProduct, CATEGORIES } from "./firebase-config.js";
+  import { requireAdminAuth, logout, fetchAllProducts, saveProduct, deleteProduct, CATEGORIES } from "./firebase-config.js";
 
   let allProducts = [];
 
-  // حماية الصفحة: يرجّع لصفحة الدخول لو مفيش مستخدم مسجّل
-  await requireAuth("admin-login.html");
+  // حماية الصفحة: لازم يكون مسجّل دخول وصلاحيته مش "assistant"
+  // المساعدين بيتحولوا تلقائيًا لـ suggest-edit.html من جوه الدالة نفسها
+  await requireAdminAuth();
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
     await logout();
