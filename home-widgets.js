@@ -1,8 +1,4 @@
 import { fetchAllProducts } from "./firebase-config.js";
-import { LS_KEYS } from "./constants.js"; // ⬅️ سطر اختبار V3.0 — احذفه بعد التأكد
-
-// ⬅️ سطر اختبار V3.0 — احذفه بعد التأكد إن الاستيراد شغال
-alert("V3.0 test OK: " + LS_KEYS.CART);
 
 const PharmacyHome = (function () {
   // ===== حالة الصيدلية (مفتوح/مغلق) بناءً على مواعيد العمل: يوميًا 8:00 ص - 1:00 ص =====
