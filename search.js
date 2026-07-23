@@ -1,9 +1,10 @@
-// search.js — منطق البحث والتصفية لصفحة المنتجات (v2.1)
+// search.js — منطق البحث والتصفية لصفحة المنتجات (v2.1 + زرار أضف للسلة)
 // بيقرأ المنتجات من Firestore، وبيعرضها بشكل تدريجي (Pagination) عشان الصفحة الرئيسية
 // متبقاش طويلة جدًا لو مفيش بحث محدد (بدل ما يعرض آلاف المنتجات مرة واحدة)
 // لازم يُستورد كـ module: <script type="module" src="search.js"></script>
 
 import { fetchAllProducts, CATEGORIES } from "./firebase-config.js";
+import Cart from "./cart.js";
 
 const PharmacySearch = (function () {
   let allProducts = [];
@@ -80,7 +81,10 @@ const PharmacySearch = (function () {
           <p>${product.short_uses || product.active_ingredient}</p>
           <div class="prod-foot">
             <span class="prod-price">${product.available ? (product.price + " " + (product.currency === "EGP" ? "ج.م" : product.currency)) : "غير متوفر"}</span>
-            <a href="product.html?id=${product.id}" class="prod-btn">التفاصيل</a>
+            <div style="display:flex;gap:8px;">
+              ${product.available ? `<button type="button" class="prod-btn prod-cart-btn" data-id="${product.id}" style="border:none;cursor:pointer;font-family:inherit;">🛒</button>` : ""}
+              <a href="product.html?id=${product.id}" class="prod-btn">التفاصيل</a>
+            </div>
           </div>
         </div>
       </div>`;
@@ -131,6 +135,21 @@ const PharmacySearch = (function () {
         renderVisible();
       });
     }
+
+    // ربط أزرار "أضف للسلة" على كل كارت
+    gridEl.querySelectorAll(".prod-cart-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const product = allProducts.find((p) => p.id === btn.dataset.id);
+        if (!product) return;
+        Cart.addItem({
+          id: product.id,
+          trade_name: product.trade_name,
+          price: product.price,
+          image: product.image,
+        });
+      });
+    });
   }
 
   async function init(inputSelector, gridSelector, categorySelector) {
