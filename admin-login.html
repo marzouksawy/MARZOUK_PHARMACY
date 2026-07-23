@@ -44,7 +44,7 @@
 <div class="card">
   <div class="badge">ص</div>
   <h1>لوحة تحكم الصيدلية</h1>
-  <p class="sub">تسجيل الدخول متاح للصيدلي فقط</p>
+  <p class="sub">تسجيل الدخول للفريق</p>
 
   <form id="login-form">
     <label for="email">البريد الإلكتروني</label>
@@ -61,7 +61,7 @@
 </div>
 
 <script type="module">
-  import { login } from "./firebase-config.js";
+  import { login, getStaffRole, logout } from "./firebase-config.js";
 
   const form = document.getElementById("login-form");
   const btn = document.getElementById("login-btn");
@@ -77,8 +77,23 @@
     errorMsg.style.display = "none";
 
     try {
-      await login(email, password);
-      window.location.href = "admin-dashboard.html";
+      const cred = await login(email, password);
+      const role = await getStaffRole(cred.user.uid);
+
+      if (role === "assistant") {
+        // المساعدين يروحوا مباشرة لصفحة اقتراح التعديل، مش للوحة الكاملة
+        window.location.href = "suggest-edit.html";
+      } else if (role) {
+        // أي صلاحية تانية (صيدلي/مالك) تدخل اللوحة الكاملة
+        window.location.href = "admin-dashboard.html";
+      } else {
+        // الحساب مسجّل في Authentication بس مش موجود في مجموعة staff — نرفض الدخول
+        await logout();
+        errorMsg.textContent = "الحساب غير مُفعّل في نظام الصيدلية. تواصل مع الصيدلي.";
+        errorMsg.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "تسجيل الدخول";
+      }
     } catch (err) {
       errorMsg.textContent = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
       errorMsg.style.display = "block";
