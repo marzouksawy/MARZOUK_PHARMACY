@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سلة المشتريات | صيدلية د. مرزوق الصاوي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="cart.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html">→ رجوع للموقع</a>
+  <span class="brand">صيدلية د. مرزوق الصاوي</span>
+</div>
+
+<div class="wrap">
+  <h1 class="page-title">🛒 سلة المشتريات</h1>
+  <div class="cart-card" id="cart-container">
+    <!-- المحتوى يتم حقنه هنا عبر cart.js -->
+  </div>
+</div>
+
+<script type="module">
+  import Cart from "./cart.js";
+  Cart.renderCartPage("#cart-container");
+</script>
+
+</body>
+</html>
