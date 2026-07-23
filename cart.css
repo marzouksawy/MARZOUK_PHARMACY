@@ -1,0 +1,54 @@
+/* cart.css — بنفس متغيرات التصميم المستخدمة في product.html */
+:root{
+  --ink:#0E2A2E;
+  --muted:rgba(14,42,46,0.6);
+  --bg:#F6F2EA;
+  --card:#FFFEFB;
+  --primary:#0F4C4F;
+  --primary-deep:#0A3638;
+  --accent:#D98C4A;
+  --whatsapp:#25D366;
+  --line:rgba(14,42,46,0.12);
+  --radius:16px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'IBM Plex Sans Arabic', sans-serif;
+  line-height:1.75;
+  padding-bottom:40px;
+}
+h1,h2,.eyebrow{font-family:'Tajawal', sans-serif;}
+
+.topbar{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;background:rgba(246,242,234,0.92);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:5;
+}
+.topbar a{color:var(--primary);text-decoration:none;font-weight:700;font-size:15px;}
+.topbar .brand{margin-inline-start:auto;color:var(--muted);font-size:13px;}
+
+.wrap{max-width:720px;margin:0 auto;padding:18px;}
+
+.page-title{font-size:22px;font-weight:800;margin:6px 0 18px;color:var(--ink);}
+
+.cart-card{
+  background:var(--card);
+  border-radius:var(--radius);
+  border:1px solid var(--line);
+  padding:18px 20px;
+}
+
+.cart-cta-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--primary);color:#fff;
+  padding:13px 20px;border-radius:12px;
+  font-weight:700;font-size:15px;
+  text-decoration:none;border:none;cursor:pointer;
+  font-family:'Tajawal', sans-serif;
+}
+.cart-cta-btn:hover{background:var(--primary-deep);}
