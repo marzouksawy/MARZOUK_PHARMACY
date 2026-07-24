@@ -88,7 +88,7 @@
 
 <script type="module">
   import Cart from "./cart.js";
-  import { db, doc, setDoc } from "./firebase-config.js";
+  import { db, doc, getDoc, runTransaction } from "./firebase-config.js";
   import { LS_KEYS, COLLECTIONS, ORDER_STATUS, WHATSAPP_NUMBERS } from "./constants.js";
   import {
     formatPrice,
@@ -253,7 +253,39 @@
       };
 
       try {
-        await setDoc(doc(db, COLLECTIONS.ORDERS, orderId), orderData);
+        // ===== V3.3: فحص وخصم المخزون + تسجيل الطلب في Transaction واحدة ذرية =====
+        // ده بيمنع بيع نفس القطعة الأخيرة لعميلين في نفس اللحظة.
+        // ملحوظة: منتجات لسه معندهاش حقل "stock" (لسه ما اتحفظتش من لوحة التحكم) بيتم تجاوز فحصها
+        // عشان منكسرش الطلبات الحالية، لحد ما تحدّث كل منتج بكميته الفعلية.
+        await runTransaction(db, async (transaction) => {
+          const productRefs = cart.map(item => doc(db, COLLECTIONS.PRODUCTS, item.id));
+          const productSnaps = await Promise.all(productRefs.map(ref => transaction.get(ref)));
+
+          // 1) فحص التوفر لكل صنف قبل أي تعديل
+          productSnaps.forEach((snap, i) => {
+            const item = cart[i];
+            if (!snap.exists()) {
+              throw new Error(`المنتج "${item.trade_name}" لم يعد متاحًا، من فضلك احذفه من السلة.`);
+            }
+            const data = snap.data();
+            if (data.stock !== undefined && data.stock < item.qty) {
+              throw new Error(`الكمية المتاحة من "${item.trade_name}" أقل من المطلوب (متاح: ${data.stock}).`);
+            }
+          });
+
+          // 2) خصم الكمية من كل منتج
+          productSnaps.forEach((snap, i) => {
+            const item = cart[i];
+            const data = snap.data();
+            if (data.stock !== undefined) {
+              transaction.update(productRefs[i], { stock: data.stock - item.qty });
+            }
+          });
+
+          // 3) تسجيل الطلب نفسه
+          const orderRef = doc(db, COLLECTIONS.ORDERS, orderId);
+          transaction.set(orderRef, orderData);
+        });
 
         // حفظ بيانات العميل محليًا للمرة الجاية
         setLocalItem(LS_KEYS.GUEST_CUSTOMER_INFO, { name, phone, delivery_mode: deliveryMode, address });
@@ -280,7 +312,7 @@
         setTimeout(() => { window.location.href = waUrl; }, 800);
       } catch (err) {
         statusMsg.classList.add("error");
-        statusMsg.textContent = "❌ حصل خطأ في تسجيل الطلب: " + err.message;
+        statusMsg.textContent = "❌ " + err.message;
         confirmBtn.disabled = false;
       }
     });
