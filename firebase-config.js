@@ -13,6 +13,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  runTransaction,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   getAuth,
@@ -121,4 +122,4 @@ export async function deleteProduct(id) {
   await deleteDoc(doc(db, "products", id));
 }
 
-export { db, doc, setDoc, getDocs, collection };
+export { db, doc, setDoc, getDoc, getDocs, collection, runTransaction };
