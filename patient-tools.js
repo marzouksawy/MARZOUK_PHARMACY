@@ -33,7 +33,7 @@ const PatientTools = (function () {
 
     el.innerHTML = `
       <div style="text-align:center;">
-        <input type="file" accept="image/*" capture="environment" id="rx-file-input" style="display:none;">
+        <input type="file" accept="image/*" id="rx-file-input" style="display:none;">
         <label for="rx-file-input" class="btn btn-primary" style="cursor:pointer;display:inline-flex;">
           📷 اختر صورة الروشتة
         </label>
