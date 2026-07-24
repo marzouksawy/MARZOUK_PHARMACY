@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الطلبات — لوحة تحكم صيدلية د. مرزوق الصاوي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E2A2E; --petrol:#0F4C4F; --petrol-deep:#0A3638;
+    --cream:#F6F2EA; --paper:#FFFEFB; --amber:#D98C4A; --line:rgba(14,42,46,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'IBM Plex Sans Arabic', sans-serif; background:var(--cream); color:var(--ink);}
+  h1,h2,h3{font-family:'Tajawal';}
+  header{
+    background:var(--petrol-deep); color:#fff; padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  header h1{font-size:18px; margin:0;}
+  header .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  header a, header button{
+    background:rgba(255,255,255,0.12); color:#fff; border:none; padding:9px 16px;
+    border-radius:999px; font-family:'IBM Plex Sans Arabic'; font-size:13.5px; cursor:pointer; text-decoration:none;
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:20px;}
+
+  .filters{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;}
+  .filter-chip{
+    border:1px solid var(--line); background:var(--paper); padding:8px 16px; border-radius:999px;
+    font-size:12.5px; cursor:pointer; white-space:nowrap;
+  }
+  .filter-chip.active{background:var(--petrol); color:#fff; border-color:var(--petrol);}
+
+  .order-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px;
+  }
+  .order-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;}
+  .order-head .oid{font-family:'Tajawal'; font-weight:800; font-size:14.5px; color:var(--petrol-deep);}
+  .order-head .odate{font-size:11.5px; color:rgba(14,42,46,0.55); margin-top:2px;}
+  .status-badge{font-size:11px; padding:4px 12px; border-radius:999px; font-weight:700; white-space:nowrap;}
+  .status-pending{background:#FBEFE0; color:#B4700E;}
+  .status-preparing{background:#E4EEFB; color:#1B5FB4;}
+  .status-out_for_delivery{background:#EDE4FB; color:#6B33B4;}
+  .status-delivered{background:#E6F4EE; color:#1B8A5A;}
+  .status-cancelled{background:#FBEAEA; color:#C0392B;}
+
+  .order-customer{font-size:13px; margin-bottom:10px; line-height:1.7;}
+  .order-customer strong{color:var(--petrol-deep);}
+  .order-customer a{color:var(--petrol); text-decoration:none;}
+
+  .order-items{border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:8px 0; margin-bottom:10px;}
+  .order-items .item-row{display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0;}
+  .order-items .item-row .name{color:var(--ink);}
+  .order-items .item-row .val{color:rgba(14,42,46,0.65);}
+
+  .order-total{display:flex; justify-content:space-between; font-family:'Tajawal'; font-weight:700; font-size:14px; margin-bottom:12px;}
+  .order-total .val{color:var(--petrol);}
+
+  .order-notes{font-size:12px; background:var(--cream); border-radius:8px; padding:8px 10px; margin-bottom:12px; color:rgba(14,42,46,0.75);}
+
+  .status-actions{display:flex; gap:6px; flex-wrap:wrap;}
+  .status-actions button{
+    border:1px solid var(--line); background:var(--cream); border-radius:8px; padding:7px 12px;
+    font-size:12px; cursor:pointer; font-family:'IBM Plex Sans Arabic';
+  }
+  .status-actions button.current{background:var(--petrol); color:#fff; border-color:var(--petrol); cursor:default;}
+  .status-actions button:disabled{opacity:.5; cursor:not-allowed;}
+
+  .loading, .empty{text-align:center; padding:50px 20px; color:rgba(14,42,46,0.5);}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>الطلبات</h1>
+  <div class="actions">
+    <a href="admin-dashboard.html">لوحة المنتجات</a>
+    <button id="logout-btn">تسجيل الخروج</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters" id="filters"></div>
+  <div id="orders-list" class="loading">جاري تحميل الطلبات...</div>
+</div>
+
+<script type="module">
+  import { requireAdminAuth, logout, db, doc, setDoc, getDocs, collection } from "./firebase-config.js";
+  import { COLLECTIONS, ORDER_STATUS, ORDER_STATUS_LABELS_AR } from "./constants.js";
+  import { formatPrice, formatDateAr } from "./utils.js";
+
+  // حماية الصفحة: نفس منطق admin-dashboard.html بالظبط
+  await requireAdminAuth();
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await logout();
+    window.location.href = "admin-login.html";
+  });
+
+  let allOrders = [];
+  let activeFilter = "all";
+
+  const STATUS_FLOW = [
+    ORDER_STATUS.PENDING,
+    ORDER_STATUS.PREPARING,
+    ORDER_STATUS.OUT_FOR_DELIVERY,
+    ORDER_STATUS.DELIVERED,
+  ];
+
+  async function loadOrders() {
+    const listEl = document.getElementById("orders-list");
+    listEl.innerHTML = `<div class="loading">جاري تحميل الطلبات...</div>`;
+    const snap = await getDocs(collection(db, COLLECTIONS.ORDERS));
+    allOrders = snap.docs
+      .map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    renderFilters();
+    renderOrders();
+  }
+
+  function renderFilters() {
+    const filtersEl = document.getElementById("filters");
+    const counts = { all: allOrders.length };
+    Object.values(ORDER_STATUS).forEach((s) => {
+      counts[s] = allOrders.filter((o) => o.status === s).length;
+    });
+
+    const chips = [
+      { key: "all", label: `الكل (${counts.all})` },
+      ...Object.values(ORDER_STATUS).map((s) => ({
+        key: s,
+        label: `${ORDER_STATUS_LABELS_AR[s]} (${counts[s] || 0})`,
+      })),
+    ];
+
+    filtersEl.innerHTML = chips
+      .map(
+        (c) =>
+          `<div class="filter-chip ${c.key === activeFilter ? "active" : ""}" data-key="${c.key}">${c.label}</div>`
+      )
+      .join("");
+
+    filtersEl.querySelectorAll(".filter-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        activeFilter = chip.dataset.key;
+        renderFilters();
+        renderOrders();
+      });
+    });
+  }
+
+  function renderOrders() {
+    const listEl = document.getElementById("orders-list");
+    const orders = activeFilter === "all" ? allOrders : allOrders.filter((o) => o.status === activeFilter);
+
+    if (!orders.length) {
+      listEl.innerHTML = `<div class="empty">مفيش طلبات في القسم ده.</div>`;
+      return;
+    }
+
+    listEl.innerHTML = orders
+      .map((order) => {
+        const waLink = `https://wa.me/${(order.customer_phone || "").replace(/^0/, "20")}`;
+        const itemsHtml = (order.items || [])
+          .map(
+            (it) =>
+              `<div class="item-row"><span class="name">${it.trade_name} × ${it.qty}</span><span class="val">${formatPrice(it.price * it.qty)}</span></div>`
+          )
+          .join("");
+
+        const statusButtons = STATUS_FLOW.map((s) => {
+          const isCurrent = order.status === s;
+          return `<button data-order="${order.id}" data-status="${s}" class="${isCurrent ? "current" : ""}" ${isCurrent ? "disabled" : ""}>${ORDER_STATUS_LABELS_AR[s]}</button>`;
+        }).join("");
+        const cancelBtn = `<button data-order="${order.id}" data-status="${ORDER_STATUS.CANCELLED}" class="${order.status === ORDER_STATUS.CANCELLED ? "current" : ""}" ${order.status === ORDER_STATUS.CANCELLED ? "disabled" : ""}>إلغاء</button>`;
+
+        return `
+        <div class="order-card">
+          <div class="order-head">
+            <div>
+              <div class="oid">#${order.order_id || order.id}</div>
+              <div class="odate">${order.created_at ? formatDateAr(order.created_at) : ""}</div>
+            </div>
+            <span class="status-badge status-${order.status}">${ORDER_STATUS_LABELS_AR[order.status] || order.status}</span>
+          </div>
+
+          <div class="order-customer">
+            <strong>${order.customer_name || "—"}</strong> ·
+            <a href="${waLink}" target="_blank">${order.customer_phone || "—"}</a><br>
+            ${order.delivery_mode === "delivery" ? `🚚 توصيل — ${order.address || ""}` : "🏪 استلام من الصيدلية"}
+          </div>
+
+          <div class="order-items">${itemsHtml}</div>
+
+          <div class="order-total"><span>الإجمالي</span><span class="val">${formatPrice(order.total)}</span></div>
+
+          ${order.notes ? `<div class="order-notes">📝 ${order.notes}</div>` : ""}
+
+          <div class="status-actions">${statusButtons}${cancelBtn}</div>
+        </div>`;
+      })
+      .join("");
+
+    listEl.querySelectorAll("button[data-order]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const orderId = btn.dataset.order;
+        const newStatus = btn.dataset.status;
+        btn.disabled = true;
+        btn.textContent = "...";
+        try {
+          await setDoc(doc(db, COLLECTIONS.ORDERS, orderId), { status: newStatus }, { merge: true });
+          await loadOrders();
+        } catch (err) {
+          alert("حصل خطأ أثناء تحديث الحالة: " + err.message);
+        }
+      });
+    });
+  }
+
+  loadOrders();
+</script>
+</body>
+</html>
