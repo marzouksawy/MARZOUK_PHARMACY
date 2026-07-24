@@ -580,8 +580,10 @@
       warnings: document.getElementById("f-warnings").value.trim(),
       available: document.getElementById("f-available").checked,
       image: currentImageBase64 || "",
-      general_dosage_note: "",
-      alternatives: [],
+      // ملحوظة: general_dosage_note و alternatives اتشالوا من هنا عمدًا.
+      // الفورم مفيهوش حقول لإدخالهم، فلو اتبعتوا بقيمة فاضية هنا هيمسحوا القيم
+      // القديمة المخزّنة في Firestore مع كل حفظة (merge:true بيستبدل أي حقل موجود
+      // في البيانات المُرسلة، حتى لو فاضي). عدم إرسالهم خالص = القيم القديمة بتفضل زي ما هي.
     };
 
     try {
