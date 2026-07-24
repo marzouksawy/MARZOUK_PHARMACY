@@ -147,7 +147,7 @@
 </div>
 
 <script type="module">
-import { fetchProduct, fetchAllProducts, CATEGORIES } from "./firebase-config.js";
+import { fetchProduct, CATEGORIES } from "./firebase-config.js";
 import Cart from "./cart.js";
 
 const WHATSAPP_NUMBER = "201062276534"; // رقم واتساب صيدلية د. مرزوق الصاوي
@@ -168,11 +168,8 @@ function renderNotFound(){
     </div>`;
 }
 
-function renderProduct(product, categories, allProducts){
+function renderProduct(product, categories, alts){
   const cat = categories.find(c => c.id === product.category) || {};
-  const alts = (product.alternatives || [])
-    .map(id => allProducts.find(p => p.id === id))
-    .filter(Boolean);
 
   const waText = encodeURIComponent(
     product.available
@@ -263,8 +260,14 @@ function renderProduct(product, categories, allProducts){
   if(!id){ renderNotFound(); return; }
   const product = await fetchProduct(id);
   if(!product){ renderNotFound(); return; }
-  const allProducts = await fetchAllProducts();
-  renderProduct(product, CATEGORIES, allProducts);
+
+  // ===== تحسين V3.3: جلب كل بديل بقراءة مفردة بدل قراءة قاعدة المنتجات كاملة =====
+  // ده بيقلل القراءات من 47 (المنتج + كل الـ46 منتج) إلى 1 + عدد البدائل بس (غالبًا 3-4 قراءات)
+  const altIds = product.alternatives || [];
+  const altResults = await Promise.all(altIds.map(altId => fetchProduct(altId)));
+  const alts = altResults.filter(Boolean);
+
+  renderProduct(product, CATEGORIES, alts);
 })();
 </script>
 </body>
