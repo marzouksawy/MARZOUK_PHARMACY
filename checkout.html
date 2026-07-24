@@ -270,7 +270,7 @@
           notes ? `ملاحظات: ${notes}` : "",
         ].filter(Boolean).join("\n");
 
-        const waUrl = buildWhatsAppLink(WHATSAPP_NUMBERS.ADMIN, lines);
+        const waUrl = buildWhatsAppLink(WHATSAPP_NUMBERS.ORDERS, lines);
 
         Cart.clearCart();
         statusMsg.classList.remove("error");
