@@ -57,10 +57,13 @@
 
   .locate-btn{
     background:none; border:1px dashed var(--petrol); color:var(--petrol); border-radius:10px;
-    padding:9px 12px; font-size:12.5px; cursor:pointer; margin:-8px 0 14px; width:100%;
+    padding:9px 12px; font-size:12.5px; cursor:pointer; margin:-8px 0 6px; width:100%;
     font-family:'IBM Plex Sans Arabic';
   }
   .locate-btn:disabled{opacity:.6;}
+  .locate-hint{font-size:11.5px; color:rgba(14,42,46,0.55); margin:-2px 0 14px;}
+  .locate-hint.accuracy-good{color:#1B8A5A;}
+  .locate-hint.accuracy-poor{color:#B4700E;}
 
   .btn-confirm{
     width:100%; padding:15px; border-radius:12px; border:none; background:var(--petrol);
@@ -152,7 +155,8 @@
           <div id="address-field" style="display:none;">
             <label for="c-address">العنوان بالتفصيل</label>
             <textarea id="c-address" placeholder="الحي، الشارع، أقرب علامة مميزة...">${saved.address || ""}</textarea>
-            <button type="button" class="locate-btn" id="locate-btn">📍 استخدم موقعي الحالي (يضيف رابط خريطة للعنوان)</button>
+            <button type="button" class="locate-btn" id="locate-btn">📍 استخدم موقعي الحالي (يضيف رابط خريطة دقيق للعنوان)</button>
+            <div class="locate-hint" id="locate-hint">قد ياخد الأمر لحد 15 ثانية في الأماكن المفتوحة عشان نضمن دقة أعلى — من فضلك خليك في مكان مفتوح لو تقدر.</div>
           </div>
 
           <label for="c-notes">ملاحظات إضافية (اختياري)</label>
@@ -182,26 +186,45 @@
       });
     });
 
-    // ===== زرار تحديد الموقع الحالي =====
+    // ===== زرار تحديد الموقع الحالي (نسخة مُحسّنة للدقة) =====
+    // بعد ملاحظة عدم دقة الموقع سابقًا: getCurrentLocation بقت بتستنى لحد 15 ثانية
+    // وبترجّع أدق قراءة وصلت خلال المدة دي، مش أول قراءة تقريبية بس.
     document.getElementById("locate-btn").addEventListener("click", async (e) => {
       const btn = e.currentTarget;
+      const hintEl = document.getElementById("locate-hint");
       btn.disabled = true;
-      btn.textContent = "جاري تحديد الموقع...";
+      btn.textContent = "جاري تحديد الموقع بدقة... ممكن ياخد لحد 15 ثانية";
+      hintEl.className = "locate-hint";
+      hintEl.textContent = "بندوّر على أدق قراءة ممكنة، من فضلك استنى...";
       try {
-        const { lat, lng } = await getCurrentLocation();
+        const { lat, lng, accuracy } = await getCurrentLocation();
         const mapLink = `https://maps.google.com/?q=${lat},${lng}`;
         const addressEl = document.getElementById("c-address");
         addressEl.value = addressEl.value
           ? `${addressEl.value}\nموقع GPS: ${mapLink}`
           : `موقع GPS: ${mapLink}`;
         btn.textContent = "✔ تم إضافة الموقع";
+
+        const accM = Math.round(accuracy || 0);
+        if (accM > 0 && accM <= 50) {
+          hintEl.className = "locate-hint accuracy-good";
+          hintEl.textContent = `✔ دقة الموقع ممتازة (± ${accM} متر تقريبًا).`;
+        } else if (accM > 0) {
+          hintEl.className = "locate-hint accuracy-poor";
+          hintEl.textContent = `⚠️ دقة الموقع تقريبية (± ${accM} متر) — يُفضّل تراجع رابط الخريطة أو تكتب أقرب علامة مميزة في العنوان كمان.`;
+        } else {
+          hintEl.className = "locate-hint";
+          hintEl.textContent = "";
+        }
       } catch (err) {
         btn.textContent = "تعذر تحديد الموقع، اكتب العنوان يدويًا";
+        hintEl.className = "locate-hint accuracy-poor";
+        hintEl.textContent = "تأكد إن إذن الموقع مفعّل للمتصفح، وإنك في مكان مفتوح لو ممكن.";
       }
       setTimeout(() => {
         btn.disabled = false;
-        btn.textContent = "📍 استخدم موقعي الحالي (يضيف رابط خريطة للعنوان)";
-      }, 2500);
+        btn.textContent = "📍 استخدم موقعي الحالي (يضيف رابط خريطة دقيق للعنوان)";
+      }, 3000);
     });
 
     // ===== إرسال الطلب =====
