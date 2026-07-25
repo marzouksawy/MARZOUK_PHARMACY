@@ -33,7 +33,7 @@
   .summary .stat .num{font-family:'Tajawal'; font-weight:800; font-size:26px; color:var(--petrol);}
   .summary .stat .lbl{font-size:12px; color:rgba(14,42,46,0.6); margin-top:2px;}
 
-  .filters{display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;}
+  .filters{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
   .filter-chip{
     border:1px solid var(--line); background:var(--paper); padding:8px 16px; border-radius:999px;
     font-size:12.5px; cursor:pointer; white-space:nowrap;
@@ -85,6 +85,13 @@
     ⓘ التقرير ده بيعرض أي منتج ناقصه <strong>الأصناف البديلة</strong> أو <strong>ملاحظة الجرعة العامة</strong> (أو الاثنين). الهدف: حصر دقيق قبل إعادة إدخال البيانات المفقودة يدويًا.
   </div>
 
+  <div class="note" id="scope-toggle-wrap">
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; margin:0;">
+      <input type="checkbox" id="scope-toggle" checked style="width:auto;">
+      <span>عرض المنتجات <strong>المُفعّلة والظاهرة للعميل فقط</strong> (استبعاد المنتجات المرجعية غير المُفعّلة pending)</span>
+    </label>
+  </div>
+
   <div class="summary" id="summary"></div>
 
   <div class="filters" id="filters"></div>
@@ -113,15 +120,28 @@
 
   let allProducts = [];
   let missingProducts = [];
-  let activeFilter = "both"; // both | alt_only | dose_only | either
+  let activeFilter = "either"; // both | alt_only | dose_only | either
+  let customerFacingOnly = true;
+
+  function isCustomerFacing(p) {
+    // منتج ظاهر فعليًا للعميل: متاح، وليس منتج مرجعي غير مفعّل، وله سعر حقيقي
+    if (p.pending === true) return false;
+    if (p.available !== true) return false;
+    if (!p.price || p.price <= 0) return false;
+    return true;
+  }
 
   async function load() {
     const listEl = document.getElementById("products-list");
     listEl.innerHTML = `<div class="loading">جاري تحميل المنتجات...</div>`;
 
     allProducts = await fetchAllProducts();
+    recomputeMissing();
+  }
 
-    missingProducts = allProducts
+  function recomputeMissing() {
+    const base = customerFacingOnly ? allProducts.filter(isCustomerFacing) : allProducts;
+    missingProducts = base
       .map((p) => {
         const missingAlt = isEmpty(p.alternatives);
         const missingDose = isEmpty(p.general_dosage_note);
@@ -134,13 +154,19 @@
     renderList();
   }
 
+  document.getElementById("scope-toggle").addEventListener("change", (e) => {
+    customerFacingOnly = e.target.checked;
+    recomputeMissing();
+  });
+
   function renderSummary() {
+    const base = customerFacingOnly ? allProducts.filter(isCustomerFacing) : allProducts;
     const bothCount = missingProducts.filter((p) => p.missingAlt && p.missingDose).length;
     const altOnly = missingProducts.filter((p) => p.missingAlt && !p.missingDose).length;
     const doseOnly = missingProducts.filter((p) => !p.missingAlt && p.missingDose).length;
 
     document.getElementById("summary").innerHTML = `
-      <div class="stat"><div class="num">${allProducts.length}</div><div class="lbl">إجمالي المنتجات</div></div>
+      <div class="stat"><div class="num">${base.length}</div><div class="lbl">${customerFacingOnly ? "منتجات مُفعّلة" : "إجمالي المنتجات"}</div></div>
       <div class="stat"><div class="num">${missingProducts.length}</div><div class="lbl">منتج ناقص بيانات</div></div>
       <div class="stat"><div class="num">${bothCount}</div><div class="lbl">ناقص الاثنين معًا</div></div>
       <div class="stat"><div class="num">${altOnly}</div><div class="lbl">ناقص البدائل فقط</div></div>
