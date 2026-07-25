@@ -126,7 +126,9 @@
   <div class="toolbar">
     <input id="admin-search" type="text" placeholder="ابحث في المنتجات...">
     <button class="btn-primary" id="add-product-btn">+ إضافة منتج جديد</button>
+    <button class="btn-primary" id="exportBackupBtn" style="background:var(--amber);">📦 نسخة احتياطية</button>
   </div>
+  <div id="exportStatus" style="font-size:13px; color:var(--petrol); margin:-10px 0 14px;"></div>
 
   <div id="products-list" class="loading">جاري تحميل المنتجات...</div>
 </div>
@@ -272,6 +274,56 @@
       return inTradeName || inActiveIngredient || inKeywords;
     });
     renderProducts(filtered);
+  });
+
+  // ===== تصدير نسخة احتياطية (Export Backup) =====
+  // بيستخدم allProducts اللي أصلاً محملة في الصفحة، من غير أي قراءة إضافية من Firestore
+  document.getElementById("exportBackupBtn").addEventListener("click", () => {
+    const btn = document.getElementById("exportBackupBtn");
+    const statusEl = document.getElementById("exportStatus");
+
+    if (!allProducts.length) {
+      statusEl.textContent = "⚠️ لسه المنتجات متحملتش، استنى شوية وحاول تاني";
+      return;
+    }
+
+    btn.disabled = true;
+    statusEl.textContent = "جاري التصدير...";
+
+    try {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+      const filename = `products_backup_${timestamp}.json`;
+
+      const backupData = {
+        exported_at: now.toISOString(),
+        count: allProducts.length,
+        products: allProducts,
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // تصفير عداد التعديلات منذ آخر نسخة احتياطية (هيتفعّل استخدامه في خطوة التنبيه الذكي لاحقًا)
+      localStorage.setItem("writesSinceBackup", "0");
+      localStorage.setItem("lastBackupDate", now.toISOString());
+
+      statusEl.textContent = `✅ تم تصدير ${allProducts.length} منتج بنجاح`;
+    } catch (err) {
+      console.error("Backup export failed:", err);
+      statusEl.textContent = "❌ فشل التصدير، حاول مرة أخرى";
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => { statusEl.textContent = ""; }, 5000);
+    }
   });
 
   // ===== فتح/غلق نافذة النموذج =====
