@@ -84,18 +84,64 @@ export function showToast(message, duration = 2500) {
   }, duration);
 }
 
-// ===== الحصول على موقع العميل (GPS) — هيتلي استخدامه في V3.2 =====
-export function getCurrentLocation() {
+// ===== الحصول على موقع العميل (GPS) — نسخة مُحسّنة للدقة (بعد ملاحظة عدم دقة الموقع) =====
+// المشكلة القديمة: getCurrentPosition بمكالمة واحدة كان بيرجّع أول قراءة متاحة، وغالبًا
+// دي كانت قراءة تقريبية معتمدة على الواي فاي/الشبكة قبل ما شريحة الـ GPS تاخد وقتها الكافي
+// (10-30 ثانية عادةً) عشان توصل لقفل دقيق (GPS lock).
+//
+// الحل: نستخدم watchPosition بدل مكالمة واحدة، ونفضل نستقبل قراءات متتالية لمدة أطول
+// (15 ثانية كحد أقصى)، ونحتفظ بأدق قراءة وصلتنا (أقل رقم accuracy بالمتر). لو وصلت لدقة
+// ممتازة (أقل من 30 متر) نوقف فورًا من غير استنى لحد آخر المهلة، عشان مانضيعش وقت العميل
+// من غير داعي لو الجهاز قفل بسرعة.
+//
+// بترجع: { lat, lng, accuracy } — accuracy بالمتر، تقدر تستخدمها لعرض مستوى الثقة للمستخدم.
+export function getCurrentLocation(options = {}) {
+  const {
+    maxWaitMs = 15000, // أقصى وقت انتظار إجمالي
+    desiredAccuracyMeters = 30, // لو وصلنا لدقة أحسن من كده، نوقف فورًا
+  } = options;
+
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("المتصفح لا يدعم تحديد الموقع"));
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (position) => resolve({ lat: position.coords.latitude, lng: position.coords.longitude }),
-      (error) => reject(error),
-      { enableHighAccuracy: true, timeout: 10000 }
+
+    let bestPosition = null;
+    let watchId = null;
+    let finished = false;
+
+    function finish(err) {
+      if (finished) return;
+      finished = true;
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      clearTimeout(timeoutId);
+      if (bestPosition) {
+        resolve({
+          lat: bestPosition.coords.latitude,
+          lng: bestPosition.coords.longitude,
+          accuracy: bestPosition.coords.accuracy,
+        });
+      } else {
+        reject(err || new Error("تعذر تحديد الموقع"));
+      }
+    }
+
+    const timeoutId = setTimeout(() => finish(new Error("انتهت مهلة تحديد الموقع")), maxWaitMs);
+
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        if (!bestPosition || position.coords.accuracy < bestPosition.coords.accuracy) {
+          bestPosition = position;
+        }
+        if (position.coords.accuracy <= desiredAccuracyMeters) {
+          finish();
+        }
+      },
+      (error) => {
+        finish(error);
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: maxWaitMs }
     );
   });
 }
-
