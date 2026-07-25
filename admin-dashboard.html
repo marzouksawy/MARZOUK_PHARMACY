@@ -176,6 +176,12 @@
       <label>تحذيرات (اختياري)</label>
       <textarea id="f-warnings"></textarea>
 
+      <label>ملاحظة الجرعة العامة (اختياري، تثقيفي فقط)<span class="photo-note">مش بديل عن استشارة الصيدلي — نص عام إرشادي بس</span></label>
+      <textarea id="f-general-dosage-note"></textarea>
+
+      <label>الأصناف البديلة (اختياري)<span class="photo-note">افصل بين كل بديل والتاني بفاصلة ،</span></label>
+      <input type="text" id="f-alternatives" placeholder="مثال: Panadol Extra, Adol Extra">
+
       <label>صورة المنتج (اختياري)<span class="photo-note">هتقدر تقص الصورة عشان تشيل أي حواف أو خلفية حوالين المنتج</span></label>
       <input type="file" id="f-image-file" accept="image/*">
       <div id="image-preview"></div>
@@ -387,6 +393,8 @@
     document.getElementById("f-keywords").value = product && product.keywords ? product.keywords.join(", ") : "";
     document.getElementById("f-short-uses").value = product ? product.short_uses || "" : "";
     document.getElementById("f-warnings").value = product ? product.warnings || "" : "";
+    document.getElementById("f-general-dosage-note").value = product ? product.general_dosage_note || "" : "";
+    document.getElementById("f-alternatives").value = product && product.alternatives ? product.alternatives.join(", ") : "";
     document.getElementById("f-available").checked = product ? !!product.available : true;
     document.getElementById("save-status").textContent = "";
     overlay.classList.add("open");
@@ -671,12 +679,18 @@
         .filter(Boolean),
       short_uses: document.getElementById("f-short-uses").value.trim(),
       warnings: document.getElementById("f-warnings").value.trim(),
+      general_dosage_note: document.getElementById("f-general-dosage-note").value.trim(),
+      alternatives: document.getElementById("f-alternatives").value
+        .split(",")
+        .map((a) => a.trim())
+        .filter(Boolean),
       available: document.getElementById("f-available").checked,
       image: currentImageBase64 || "",
-      // ملحوظة: general_dosage_note و alternatives اتشالوا من هنا عمدًا.
-      // الفورم مفيهوش حقول لإدخالهم، فلو اتبعتوا بقيمة فاضية هنا هيمسحوا القيم
-      // القديمة المخزّنة في Firestore مع كل حفظة (merge:true بيستبدل أي حقل موجود
-      // في البيانات المُرسلة، حتى لو فاضي). عدم إرسالهم خالص = القيم القديمة بتفضل زي ما هي.
+      // ملحوظة (مُحدّثة): general_dosage_note و alternatives بقى ليهم حقول فعلية في الفورم فوق،
+      // فبقى آمن نبعتهم هنا حتى لو فاضيين — لأنهم بيعبّروا عن قيمة حقيقية اختارها المستخدم
+      // (يعني "مسحتهم عمدًا")، مش قيمة افتراضية غير مقصودة زي قبل كده. saveProduct بتستخدم
+      // merge:true فبرضه أي حقل تاني مش موجود في data (زي general_dosage_note لو نسيناه) هيفضل
+      // زي ما هو، لكن دلوقتي الحقلين دول بقوا جزء رسمي من دورة التعديل.
     };
 
     try {
