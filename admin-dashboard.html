@@ -265,8 +265,9 @@
       .join("");
   }
 
-  document.getElementById("admin-search").addEventListener("input", (e) => {
-    const q = e.target.value.trim().toLowerCase();
+  function filterAndRenderBySearch(term) {
+    const q = term.trim().toLowerCase();
+    if (!q) { renderProducts(allProducts); return; }
     const filtered = allProducts.filter((p) => {
       const inTradeName = (p.trade_name || "").toLowerCase().includes(q);
       const inActiveIngredient = (p.active_ingredient || "").toLowerCase().includes(q);
@@ -274,7 +275,23 @@
       return inTradeName || inActiveIngredient || inKeywords;
     });
     renderProducts(filtered);
+  }
+
+  document.getElementById("admin-search").addEventListener("input", (e) => {
+    filterAndRenderBySearch(e.target.value);
   });
+
+  // دعم الوصول المباشر لمنتج معيّن عبر الرابط (مثال: admin-dashboard.html?q=اسم المنتج)
+  // مُستخدم من صفحة تقرير البيانات الناقصة (missing-fields-report.html)
+  // ملحوظة: لازم تتنفذ بعد تحميل allProducts فعليًا، فبتتنادى من نهاية loadProducts() الأولى
+  function applySearchFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q");
+    if (q) {
+      document.getElementById("admin-search").value = q;
+      filterAndRenderBySearch(q);
+    }
+  }
 
   // ===== عداد التعديلات منذ آخر نسخة احتياطية =====
   const WRITE_ALERT_THRESHOLD = 10;
@@ -674,7 +691,7 @@
     saveBtn.disabled = false;
   });
 
-  loadProducts();
+  loadProducts().then(applySearchFromUrl);
 
   // فحص فوري عند فتح اللوحة: لو العداد أصلاً متجاوز الحد من جلسة سابقة
   (function checkBackupReminderOnLoad() {
