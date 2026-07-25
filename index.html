@@ -240,6 +240,11 @@
   }
   .contact-item .t{font-size:13px;opacity:0.6;margin-bottom:2px;}
   .contact-item .d{font-size:15px;font-weight:500;}
+  .directions-link{
+    display:inline-flex;align-items:center;gap:6px;margin-top:6px;
+    background:rgba(255,255,255,0.12);color:var(--paper);padding:8px 14px;
+    border-radius:999px;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.18);
+  }
 
   /* CTA strip */
   .cta-strip{
@@ -452,7 +457,13 @@
       <div class="contact-list">
         <div class="contact-item">
           <span class="ic">📍</span>
-          <div><div class="t">العنوان</div><div class="d">قرية مؤنسة، مركز أشمون، محافظة المنوفية، مصر</div></div>
+          <div>
+            <div class="t">العنوان</div>
+            <div class="d">مونسة وعزبتها، مركز أشمون، محافظة المنوفية، مصر</div>
+            <a class="directions-link" href="https://www.google.com/maps/dir/?api=1&destination=30.298625,30.993625" target="_blank" rel="noopener">
+              🧭 احصل على الاتجاهات إلى الصيدلية
+            </a>
+          </div>
         </div>
         <div class="contact-item">
           <span class="ic">📞</span>
@@ -465,7 +476,7 @@
       </div>
       <div style="margin-top:20px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);">
         <iframe
-          src="https://www.google.com/maps?q=قرية+مؤنسة+مركز+أشمون+المنوفية&output=embed"
+          src="https://www.google.com/maps?q=30.298625,30.993625&z=16&output=embed"
           width="100%" height="220" style="border:0;display:block;" loading="lazy"></iframe>
       </div>
     </div>
