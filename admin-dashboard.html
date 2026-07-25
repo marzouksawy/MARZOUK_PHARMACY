@@ -276,6 +276,25 @@
     renderProducts(filtered);
   });
 
+  // ===== عداد التعديلات منذ آخر نسخة احتياطية =====
+  const WRITE_ALERT_THRESHOLD = 10;
+
+  function bumpWriteCounter() {
+    const current = parseInt(localStorage.getItem("writesSinceBackup") || "0", 10);
+    const updated = current + 1;
+    localStorage.setItem("writesSinceBackup", String(updated));
+    if (updated >= WRITE_ALERT_THRESHOLD) {
+      showBackupReminder(updated);
+    }
+  }
+
+  function showBackupReminder(count) {
+    const statusEl = document.getElementById("exportStatus");
+    statusEl.innerHTML = `⚠️ في ${count} تعديل من غير نسخة احتياطية جديدة — يُفضّل الضغط على "نسخة احتياطية" الآن`;
+    statusEl.style.color = "#C0392B";
+    statusEl.style.fontWeight = "600";
+  }
+
   // ===== تصدير نسخة احتياطية (Export Backup) =====
   // بيستخدم allProducts اللي أصلاً محملة في الصفحة، من غير أي قراءة إضافية من Firestore
   document.getElementById("exportBackupBtn").addEventListener("click", () => {
@@ -316,6 +335,8 @@
       localStorage.setItem("writesSinceBackup", "0");
       localStorage.setItem("lastBackupDate", now.toISOString());
 
+      statusEl.style.color = "var(--petrol)";
+      statusEl.style.fontWeight = "normal";
       statusEl.textContent = `✅ تم تصدير ${allProducts.length} منتج بنجاح`;
     } catch (err) {
       console.error("Backup export failed:", err);
@@ -373,7 +394,10 @@
       openModal(product);
     } else if (btn.dataset.action === "delete") {
       if (confirm(`متأكد إنك عايز تحذف "${product.trade_name}"؟`)) {
-        deleteProduct(id).then(loadProducts);
+        deleteProduct(id).then(() => {
+          bumpWriteCounter();
+          loadProducts();
+        });
       }
     }
   });
@@ -640,6 +664,7 @@
 
     try {
       await saveProduct(id, data);
+      bumpWriteCounter();
       statusEl.textContent = "✔ تم الحفظ بنجاح";
       await loadProducts();
       setTimeout(closeModal, 600);
@@ -650,6 +675,14 @@
   });
 
   loadProducts();
+
+  // فحص فوري عند فتح اللوحة: لو العداد أصلاً متجاوز الحد من جلسة سابقة
+  (function checkBackupReminderOnLoad() {
+    const current = parseInt(localStorage.getItem("writesSinceBackup") || "0", 10);
+    if (current >= WRITE_ALERT_THRESHOLD) {
+      showBackupReminder(current);
+    }
+  })();
 </script>
 </body>
 </html>
