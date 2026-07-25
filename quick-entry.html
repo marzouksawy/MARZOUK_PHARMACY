@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدخال سريع — صيدلية د. مرزوق الصاوي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E2A2E; --petrol:#0F4C4F; --petrol-deep:#0A3638;
+    --cream:#F6F2EA; --paper:#FFFEFB; --amber:#D98C4A; --line:rgba(14,42,46,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'IBM Plex Sans Arabic', sans-serif; background:var(--cream); color:var(--ink); padding-bottom:40px;}
+  h1,h2,h3{font-family:'Tajawal';}
+  header{
+    background:var(--petrol-deep); color:#fff; padding:14px 18px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+    position:sticky; top:0; z-index:20;
+  }
+  header h1{font-size:16px; margin:0;}
+  header .actions{display:flex; gap:8px; align-items:center;}
+  header a, header button{
+    background:rgba(255,255,255,0.12); color:#fff; border:none; padding:8px 14px;
+    border-radius:999px; font-family:'IBM Plex Sans Arabic'; font-size:13px; cursor:pointer; text-decoration:none;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:16px;}
+
+  /* شريط التقدّم */
+  .progress-bar{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px;
+    padding:12px 16px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;
+    font-size:13.5px; gap:10px; flex-wrap:wrap;
+  }
+  .progress-bar .count{font-weight:700; color:var(--petrol);}
+  .progress-track{width:100%; height:6px; background:var(--line); border-radius:99px; margin-top:8px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--amber); border-radius:99px; transition:width .2s;}
+
+  .filter-row{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .filter-row button{
+    flex:1; min-width:120px; border:1px solid var(--line); background:var(--paper); color:var(--ink);
+    padding:9px 10px; border-radius:10px; font-family:'IBM Plex Sans Arabic'; font-size:13px; cursor:pointer;
+  }
+  .filter-row button.active{background:var(--petrol); color:#fff; border-color:var(--petrol);}
+
+  #jump-search{width:100%; padding:11px 14px; border-radius:10px; border:1px solid var(--line); font-family:'IBM Plex Sans Arabic'; background:var(--paper); margin-bottom:14px;}
+  #jump-results{background:var(--paper); border:1px solid var(--line); border-radius:10px; margin:-8px 0 14px; overflow:hidden; display:none;}
+  #jump-results div{padding:10px 14px; font-size:13.5px; border-bottom:1px solid var(--line); cursor:pointer;}
+  #jump-results div:last-child{border-bottom:none;}
+  #jump-results div:active{background:var(--cream);}
+
+  #new-product-btn{
+    width:100%; background:var(--amber); color:#fff; border:none; padding:12px; border-radius:10px;
+    font-family:'Tajawal'; font-weight:700; font-size:14px; cursor:pointer; margin-bottom:16px;
+  }
+
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:18px;}
+  .card h2{font-size:16px; margin:0 0 4px;}
+  .card .sub{font-size:12.5px; color:rgba(14,42,46,0.55); margin-bottom:14px;}
+
+  label{font-size:13px; font-weight:600; display:block; margin:12px 0 5px;}
+  input, select, textarea{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line);
+    font-family:'IBM Plex Sans Arabic'; font-size:13.5px; background:var(--cream);
+  }
+  textarea{resize:vertical; min-height:56px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .toggle-row{display:flex; align-items:center; gap:8px; margin-top:14px;}
+  .toggle-row label{margin:0; font-weight:500;}
+  .photo-note{font-size:11.5px; font-weight:normal; color:rgba(14,42,46,0.5); display:block; margin-top:2px;}
+
+  .nav-actions{display:flex; gap:8px; margin-top:20px; flex-wrap:wrap;}
+  .btn-save{flex:2; background:var(--petrol); color:#fff; border:none; padding:13px; border-radius:10px; font-family:'Tajawal'; font-weight:700; font-size:14.5px; cursor:pointer;}
+  .btn-skip{flex:1; background:var(--cream); color:var(--ink); border:1px solid var(--line); padding:13px; border-radius:10px; font-family:'IBM Plex Sans Arabic'; font-size:13.5px; cursor:pointer;}
+  .btn-prev{flex:1; background:var(--cream); color:var(--ink); border:1px solid var(--line); padding:13px; border-radius:10px; font-family:'IBM Plex Sans Arabic'; font-size:13.5px; cursor:pointer;}
+  #save-status{font-size:13px; text-align:center; margin-top:10px; color:var(--petrol); min-height:18px;}
+
+  .empty-state, .loading{text-align:center; padding:50px 20px; color:rgba(14,42,46,0.55); font-size:14px;}
+  .empty-state .big{font-size:38px; margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ إدخال سريع</h1>
+  <div class="actions">
+    <a href="admin-dashboard.html">اللوحة الرئيسية</a>
+    <button id="logout-btn">خروج</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="progress-bar">
+    <div>المنتج <span class="count" id="pos-count">–</span> من <span id="total-count">–</span></div>
+    <div id="filter-label" style="color:rgba(14,42,46,0.6);">—</div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+  <div class="filter-row" style="margin-top:14px;">
+    <button id="filter-missing" class="active">🔴 الناقصين (pending)</button>
+    <button id="filter-all">📋 كل المنتجات</button>
+  </div>
+
+  <input id="jump-search" type="text" placeholder="🔍 قفز مباشر لمنتج بالاسم...">
+  <div id="jump-results"></div>
+
+  <button id="new-product-btn">+ إضافة منتج جديد بالكامل</button>
+
+  <div id="card-area" class="loading">جاري تحميل المنتجات...</div>
+
+</div>
+
+<script type="module">
+import { requireAdminAuth, fetchAllProducts, saveProduct, logout, CATEGORIES } from "./firebase-config.js";
+
+const WRITE_ALERT_THRESHOLD = 10;
+const IDX_KEY = "quickEntryIndex_v1";
+const FILTER_KEY = "quickEntryFilter_v1";
+
+let allProducts = [];
+let queue = [];
+let currentIndex = 0;
+let filterMode = localStorage.getItem(FILTER_KEY) || "missing";
+let isNewMode = false; // true لو بنعرض فورم إضافة منتج جديد
+
+const cardArea = document.getElementById("card-area");
+const posCount = document.getElementById("pos-count");
+const totalCount = document.getElementById("total-count");
+const filterLabel = document.getElementById("filter-label");
+const progressFill = document.getElementById("progress-fill");
+const filterMissingBtn = document.getElementById("filter-missing");
+const filterAllBtn = document.getElementById("filter-all");
+const jumpSearch = document.getElementById("jump-search");
+const jumpResults = document.getElementById("jump-results");
+const newProductBtn = document.getElementById("new-product-btn");
+
+function bumpWriteCounter() {
+  const current = parseInt(localStorage.getItem("writesSinceBackup") || "0", 10) + 1;
+  localStorage.setItem("writesSinceBackup", String(current));
+}
+
+function isIncomplete(p) {
+  return p.pending === true;
+}
+
+function buildQueue() {
+  const source = filterMode === "missing" ? allProducts.filter(isIncomplete) : allProducts.slice();
+  source.sort((a, b) => (a.trade_name || "").localeCompare(b.trade_name || "", "ar"));
+  queue = source;
+  filterLabel.textContent = filterMode === "missing" ? "عرض: الناقصين بس" : "عرض: الكل";
+}
+
+function saveIndex() {
+  localStorage.setItem(IDX_KEY + "_" + filterMode, String(currentIndex));
+}
+
+function loadIndex() {
+  const saved = parseInt(localStorage.getItem(IDX_KEY + "_" + filterMode) || "0", 10);
+  currentIndex = Math.min(Math.max(saved, 0), Math.max(queue.length - 1, 0));
+}
+
+function categoryOptions(selected) {
+  return CATEGORIES.map(c => `<option value="${c.id}" ${c.id === selected ? "selected" : ""}>${c.name}</option>`).join("");
+}
+
+function renderEmpty() {
+  cardArea.innerHTML = `
+    <div class="empty-state">
+      <div class="big">🎉</div>
+      لا يوجد منتجات في هذا الفلتر حاليًا.<br>جرّب "كل المنتجات" أو أضف منتج جديد.
+    </div>`;
+  posCount.textContent = "0";
+  totalCount.textContent = String(queue.length);
+  progressFill.style.width = "0%";
+}
+
+function renderProductCard(p) {
+  isNewMode = false;
+  posCount.textContent = String(currentIndex + 1);
+  totalCount.textContent = String(queue.length);
+  progressFill.style.width = queue.length ? `${((currentIndex + 1) / queue.length) * 100}%` : "0%";
+
+  cardArea.innerHTML = `
+    <div class="card">
+      <h2>${p.trade_name || "بدون اسم"}</h2>
+      <div class="sub">${p.id}</div>
+
+      <label>الاسم التجاري</label>
+      <input type="text" id="f-trade-name" value="${escapeAttr(p.trade_name || "")}" required>
+
+      <label>المادة الفعالة</label>
+      <input type="text" id="f-active-ingredient" value="${escapeAttr(p.active_ingredient || "")}">
+
+      <div class="row2">
+        <div>
+          <label>الفئة</label>
+          <select id="f-category">${categoryOptions(p.category || "drugs")}</select>
+        </div>
+        <div>
+          <label>السعر (ج.م)</label>
+          <input type="number" id="f-price" step="0.01" value="${p.price || ""}">
+        </div>
+      </div>
+
+      <label>الكمية بالمخزون</label>
+      <input type="number" id="f-stock" step="1" min="0" value="${p.stock ?? 0}">
+
+      <label>الشركة المصنّعة (اختياري)</label>
+      <input type="text" id="f-company" value="${escapeAttr(p.company || "")}">
+
+      <label>كلمات بحث إضافية بالإنجليزي (افصل بفاصلة)</label>
+      <input type="text" id="f-keywords" value="${escapeAttr((p.keywords || []).join(", "))}">
+
+      <label>وصف مختصر / الاستخدامات</label>
+      <textarea id="f-short-uses">${escapeHtml(p.short_uses || "")}</textarea>
+
+      <label>تحذيرات (اختياري)</label>
+      <textarea id="f-warnings">${escapeHtml(p.warnings || "")}</textarea>
+
+      <label>ملاحظة الجرعة العامة (اختياري، تثقيفي فقط)<span class="photo-note">مش بديل عن استشارة الصيدلي</span></label>
+      <textarea id="f-general-dosage-note">${escapeHtml(p.general_dosage_note || "")}</textarea>
+
+      <label>الأصناف البديلة (اختياري، افصل بفاصلة)</label>
+      <input type="text" id="f-alternatives" value="${escapeAttr((p.alternatives || []).join(", "))}">
+
+      <div class="toggle-row">
+        <input type="checkbox" id="f-available" ${p.available ? "checked" : ""}>
+        <label for="f-available">متاح ويظهر للعميل</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="f-verified" ${p.pending ? "" : "checked"}>
+        <label for="f-verified">تم التحقق من البيانات (يلغي حالة "قيد المراجعة")</label>
+      </div>
+
+      <div class="nav-actions">
+        <button type="button" class="btn-prev" id="btn-prev">◀ السابق</button>
+        <button type="button" class="btn-skip" id="btn-skip">تخطي ⏩</button>
+        <button type="button" class="btn-save" id="btn-save">✔ حفظ والتالي ⏭</button>
+      </div>
+      <div id="save-status"></div>
+    </div>`;
+
+  document.getElementById("btn-save").addEventListener("click", () => handleSave(p.id));
+  document.getElementById("btn-skip").addEventListener("click", handleSkip);
+  document.getElementById("btn-prev").addEventListener("click", handlePrev);
+}
+
+function renderNewProductCard() {
+  isNewMode = true;
+  cardArea.innerHTML = `
+    <div class="card">
+      <h2>+ منتج جديد بالكامل</h2>
+      <div class="sub">هيتضاف كمستند جديد في قاعدة البيانات</div>
+
+      <label>الاسم التجاري</label>
+      <input type="text" id="f-trade-name" required placeholder="مطلوب">
+
+      <label>المادة الفعالة</label>
+      <input type="text" id="f-active-ingredient">
+
+      <div class="row2">
+        <div>
+          <label>الفئة</label>
+          <select id="f-category">${categoryOptions("drugs")}</select>
+        </div>
+        <div>
+          <label>السعر (ج.م)</label>
+          <input type="number" id="f-price" step="0.01">
+        </div>
+      </div>
+
+      <label>الكمية بالمخزون</label>
+      <input type="number" id="f-stock" step="1" min="0" value="0">
+
+      <label>الشركة المصنّعة (اختياري)</label>
+      <input type="text" id="f-company">
+
+      <label>كلمات بحث إضافية بالإنجليزي (افصل بفاصلة)</label>
+      <input type="text" id="f-keywords">
+
+      <label>وصف مختصر / الاستخدامات</label>
+      <textarea id="f-short-uses"></textarea>
+
+      <label>تحذيرات (اختياري)</label>
+      <textarea id="f-warnings"></textarea>
+
+      <label>ملاحظة الجرعة العامة (اختياري)</label>
+      <textarea id="f-general-dosage-note"></textarea>
+
+      <label>الأصناف البديلة (اختياري، افصل بفاصلة)</label>
+      <input type="text" id="f-alternatives">
+
+      <div class="toggle-row">
+        <input type="checkbox" id="f-available">
+        <label for="f-available">متاح ويظهر للعميل</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="f-verified" checked>
+        <label for="f-verified">تم التحقق من البيانات (يلغي حالة "قيد المراجعة")</label>
+      </div>
+      <p class="photo-note" style="margin-top:10px;">ملحوظة: صورة المنتج تُضاف لاحقًا من اللوحة الرئيسية (فيها أداة القص).</p>
+
+      <div class="nav-actions">
+        <button type="button" class="btn-prev" id="btn-cancel-new">إلغاء</button>
+        <button type="button" class="btn-save" id="btn-save-new">✔ حفظ المنتج الجديد</button>
+      </div>
+      <div id="save-status"></div>
+    </div>`;
+
+  document.getElementById("btn-save-new").addEventListener("click", handleSaveNew);
+  document.getElementById("btn-cancel-new").addEventListener("click", () => renderCurrent());
+}
+
+function collectFormData() {
+  return {
+    trade_name: document.getElementById("f-trade-name").value.trim(),
+    active_ingredient: document.getElementById("f-active-ingredient").value.trim(),
+    category: document.getElementById("f-category").value,
+    price: parseFloat(document.getElementById("f-price").value) || 0,
+    currency: "EGP",
+    stock: parseInt(document.getElementById("f-stock").value, 10) || 0,
+    company: document.getElementById("f-company").value.trim(),
+    keywords: document.getElementById("f-keywords").value.split(",").map(k => k.trim()).filter(Boolean),
+    short_uses: document.getElementById("f-short-uses").value.trim(),
+    warnings: document.getElementById("f-warnings").value.trim(),
+    general_dosage_note: document.getElementById("f-general-dosage-note").value.trim(),
+    alternatives: document.getElementById("f-alternatives").value.split(",").map(a => a.trim()).filter(Boolean),
+    available: document.getElementById("f-available").checked,
+    pending: !document.getElementById("f-verified").checked,
+  };
+}
+
+function slugify(text) {
+  return (
+    "p_" +
+    text.trim().toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g, "_").slice(0, 30) +
+    "_" + Date.now().toString(36)
+  );
+}
+
+async function handleSave(id) {
+  const statusEl = document.getElementById("save-status");
+  const saveBtn = document.getElementById("btn-save");
+  const tradeName = document.getElementById("f-trade-name").value.trim();
+  if (!tradeName) { statusEl.textContent = "❌ الاسم التجاري مطلوب"; return; }
+
+  saveBtn.disabled = true;
+  statusEl.textContent = "جاري الحفظ...";
+  try {
+    const data = collectFormData();
+    await saveProduct(id, data);
+    bumpWriteCounter();
+    // حدّث النسخة المحلية عشان الفلترة تبقى صح لحد ما نعمل تحديث كامل
+    const localIdx = allProducts.findIndex(x => x.id === id);
+    if (localIdx !== -1) allProducts[localIdx] = { ...allProducts[localIdx], ...data };
+    statusEl.textContent = "✔ تم الحفظ";
+    setTimeout(() => { advance(); }, 350);
+  } catch (err) {
+    statusEl.textContent = "❌ حصل خطأ: " + err.message;
+    saveBtn.disabled = false;
+  }
+}
+
+async function handleSaveNew() {
+  const statusEl = document.getElementById("save-status");
+  const saveBtn = document.getElementById("btn-save-new");
+  const tradeName = document.getElementById("f-trade-name").value.trim();
+  if (!tradeName) { statusEl.textContent = "❌ الاسم التجاري مطلوب"; return; }
+
+  saveBtn.disabled = true;
+  statusEl.textContent = "جاري الحفظ...";
+  try {
+    const data = collectFormData();
+    const id = slugify(tradeName);
+    await saveProduct(id, data);
+    bumpWriteCounter();
+    allProducts.push({ id, ...data });
+    statusEl.textContent = "✔ تم إضافة المنتج";
+    setTimeout(() => {
+      buildQueue();
+      // روح لمكان المنتج الجديد في القائمة الحالية لو ظاهر فيها، أو ارجع للمكان اللي كنا فيه
+      const newPos = queue.findIndex(x => x.id === id);
+      currentIndex = newPos !== -1 ? newPos : currentIndex;
+      saveIndex();
+      renderCurrent();
+    }, 350);
+  } catch (err) {
+    statusEl.textContent = "❌ حصل خطأ: " + err.message;
+    saveBtn.disabled = false;
+  }
+}
+
+function handleSkip() {
+  advance();
+}
+
+function handlePrev() {
+  if (currentIndex > 0) currentIndex--;
+  saveIndex();
+  renderCurrent();
+}
+
+function advance() {
+  if (currentIndex < queue.length - 1) {
+    currentIndex++;
+  } else {
+    // آخر عنصر — أعد بناء القائمة (ممكن يبقى فاضي دلوقتي لو كان الفلتر "الناقصين")
+    buildQueue();
+    currentIndex = Math.min(currentIndex, Math.max(queue.length - 1, 0));
+  }
+  saveIndex();
+  renderCurrent();
+}
+
+function renderCurrent() {
+  if (!queue.length) { renderEmpty(); return; }
+  loadIndex();
+  renderProductCard(queue[currentIndex]);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+function escapeAttr(str) {
+  return escapeHtml(str).replace(/"/g, "&quot;");
+}
+
+// ===== الفلاتر =====
+filterMissingBtn.addEventListener("click", () => switchFilter("missing"));
+filterAllBtn.addEventListener("click", () => switchFilter("all"));
+
+function switchFilter(mode) {
+  filterMode = mode;
+  localStorage.setItem(FILTER_KEY, mode);
+  filterMissingBtn.classList.toggle("active", mode === "missing");
+  filterAllBtn.classList.toggle("active", mode === "all");
+  buildQueue();
+  loadIndex();
+  renderCurrent();
+}
+
+// ===== البحث والقفز المباشر =====
+jumpSearch.addEventListener("input", () => {
+  const term = jumpSearch.value.trim().toLowerCase();
+  if (!term) { jumpResults.style.display = "none"; jumpResults.innerHTML = ""; return; }
+  const matches = allProducts
+    .filter(p => (p.trade_name || "").toLowerCase().includes(term) || (p.active_ingredient || "").toLowerCase().includes(term))
+    .slice(0, 8);
+  if (!matches.length) { jumpResults.style.display = "none"; return; }
+  jumpResults.innerHTML = matches.map(p => `<div data-id="${escapeAttr(p.id)}">${escapeHtml(p.trade_name || "")} ${p.pending ? "🔴" : "🟢"}</div>`).join("");
+  jumpResults.style.display = "block";
+  jumpResults.querySelectorAll("div").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.getAttribute("data-id");
+      // نتأكد إن المنتج موجود في الـ queue الحالية، لو مش موجود (بسبب الفلتر) نتحول لفلتر "الكل"
+      let pos = queue.findIndex(p => p.id === id);
+      if (pos === -1) {
+        switchFilter("all");
+        pos = queue.findIndex(p => p.id === id);
+      }
+      if (pos !== -1) {
+        currentIndex = pos;
+        saveIndex();
+        renderCurrent();
+      }
+      jumpSearch.value = "";
+      jumpResults.style.display = "none";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+});
+
+// ===== منتج جديد =====
+newProductBtn.addEventListener("click", () => {
+  renderNewProductCard();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+// ===== تسجيل الخروج =====
+document.getElementById("logout-btn").addEventListener("click", async () => {
+  await logout();
+  window.location.href = "admin-login.html";
+});
+
+// ===== التشغيل =====
+(async function init() {
+  await requireAdminAuth();
+  filterMissingBtn.classList.toggle("active", filterMode === "missing");
+  filterAllBtn.classList.toggle("active", filterMode === "all");
+  allProducts = await fetchAllProducts();
+  buildQueue();
+  loadIndex();
+  renderCurrent();
+})();
+</script>
+</body>
+</html>
