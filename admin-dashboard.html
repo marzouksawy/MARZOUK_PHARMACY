@@ -151,8 +151,12 @@
           <label>الفئة</label>
           <select id="f-category">
             <option value="drugs">أدوية</option>
-            <option value="supplements">فيتامينات ومكملات</option>
-            <option value="care">عناية ومستلزمات طبية</option>
+            <option value="supplements">فيتامينات ومكملات غذائية</option>
+            <option value="skincare">العناية بالبشرة الطبية</option>
+            <option value="baby">عناية الطفل والأم</option>
+            <option value="medical_supplies">مستلزمات طبية</option>
+            <option value="personal_care">العناية الشخصية</option>
+            <option value="care">عناية ومستلزمات طبية (تصنيف قديم)</option>
           </select>
         </div>
         <div>
@@ -166,6 +170,20 @@
 
       <label>الشركة المصنّعة (اختياري)</label>
       <input type="text" id="f-company">
+
+      <div class="row2">
+        <div>
+          <label>الشكل الصيدلي (اختياري)</label>
+          <input type="text" id="f-dosage-form" placeholder="مثال: أقراص، شراب، كريم">
+        </div>
+        <div>
+          <label>التركيز (اختياري)</label>
+          <input type="text" id="f-strength" placeholder="مثال: 500 مجم">
+        </div>
+      </div>
+
+      <label>حجم العبوة (اختياري)</label>
+      <input type="text" id="f-pack-size" placeholder="مثال: 20 قرص أو 100 مل">
 
       <label>كلمات بحث إضافية بالإنجليزي (افصل بينهم بفاصلة ،)</label>
       <input type="text" id="f-keywords" placeholder="مثال: Panadol, Panadol Extra">
@@ -182,7 +200,7 @@
       <label>الأصناف البديلة (اختياري)<span class="photo-note">افصل بين كل بديل والتاني بفاصلة ،</span></label>
       <input type="text" id="f-alternatives" placeholder="مثال: Panadol Extra, Adol Extra">
 
-      <label>صورة المنتج (اختياري)<span class="photo-note">هتقدر تقص الصورة عشان تشيل أي حواف أو خلفية حوالين المنتج</span></label>
+      <label>صورة غلاف المنتج (اختياري)<span class="photo-note">استخدم صورة أصلية وواضحة للعبوة بخلفية نظيفة، من غير علامة مائية على المنتج</span></label>
       <input type="file" id="f-image-file" accept="image/*">
       <div id="image-preview"></div>
 
@@ -390,6 +408,9 @@
     document.getElementById("f-price").value = product ? product.price || 0 : "";
     document.getElementById("f-stock").value = product && product.stock !== undefined ? product.stock : 0;
     document.getElementById("f-company").value = product ? product.company || "" : "";
+    document.getElementById("f-dosage-form").value = product ? product.dosage_form || "" : "";
+    document.getElementById("f-strength").value = product ? product.strength || "" : "";
+    document.getElementById("f-pack-size").value = product ? product.pack_size || "" : "";
     document.getElementById("f-keywords").value = product && product.keywords ? product.keywords.join(", ") : "";
     document.getElementById("f-short-uses").value = product ? product.short_uses || "" : "";
     document.getElementById("f-warnings").value = product ? product.warnings || "" : "";
@@ -427,19 +448,9 @@
     }
   });
 
-  // ===== اللوجو + المعالجة النهائية (تصغير + ختم اللوجو + ضغط) =====
-  let logoImage = null;
-  function loadLogo() {
-    return new Promise((resolve) => {
-      if (logoImage) { resolve(logoImage); return; }
-      const img = new Image();
-      img.onload = () => { logoImage = img; resolve(img); };
-      img.onerror = () => resolve(null);
-      img.src = "logo-watermark.png";
-    });
-  }
-
-  function processImageDataUrl(dataUrl, maxWidth = 800, maxSizeKB = 200) {
+  // ===== المعالجة النهائية لصورة الغلاف (تصغير متوازن + ضغط) =====
+  // لا نضيف علامة مائية فوق العبوة لأن وضوح اسم المنتج وتركيزه أهم لقرار العميل.
+  function processImageDataUrl(dataUrl, maxWidth = 1000, maxSizeKB = 350) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = async () => {
@@ -454,18 +465,6 @@
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
 
-        const logo = await loadLogo();
-        if (logo) {
-          const logoWidth = Math.round(width * 0.24);
-          const logoHeight = Math.round(logoWidth * (logo.height / logo.width));
-          const margin = 10;
-          const lx = width - logoWidth - margin;
-          const ly = height - logoHeight - margin;
-          const pad = 6;
-          ctx.fillStyle = "rgba(255,255,255,0.8)";
-          ctx.fillRect(lx - pad, ly - pad, logoWidth + pad * 2, logoHeight + pad * 2);
-          ctx.drawImage(logo, lx, ly, logoWidth, logoHeight);
-        }
 
         let quality = 0.8;
         let out = canvas.toDataURL("image/jpeg", quality);
@@ -673,6 +672,9 @@
       currency: "EGP",
       stock: parseInt(document.getElementById("f-stock").value, 10) || 0,
       company: document.getElementById("f-company").value.trim(),
+      dosage_form: document.getElementById("f-dosage-form").value.trim(),
+      strength: document.getElementById("f-strength").value.trim(),
+      pack_size: document.getElementById("f-pack-size").value.trim(),
       keywords: document.getElementById("f-keywords").value
         .split(",")
         .map((k) => k.trim())

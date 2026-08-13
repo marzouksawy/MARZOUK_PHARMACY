@@ -66,12 +66,21 @@
     background:var(--cat-color,var(--primary));
   }
   .media{
-    aspect-ratio:4/3;background:#EEF3F1;
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden;
+    aspect-ratio:1/1;background:linear-gradient(160deg,#FFFFFF 0%,#EEF3F1 100%);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--line);
   }
-  .media img{width:100%;height:100%;object-fit:cover;}
-  .media .fallback{font-size:48px;opacity:.4;}
+  .gallery-main{width:100%;height:100%;padding:0;border:0;background:transparent;cursor:zoom-in;}
+  .media img{width:100%;height:100%;object-fit:contain;padding:24px;}
+  .media .fallback{font-size:52px;opacity:.45;}
+  .gallery-thumbs{display:flex;gap:10px;padding:14px 16px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto;}
+  .gallery-thumb{width:56px;height:56px;flex:0 0 56px;padding:3px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;overflow:hidden;}
+  .gallery-thumb.active{border:2px solid var(--primary);}
+  .gallery-thumb img{width:100%;height:100%;object-fit:contain;}
+  .image-modal{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(7,25,27,.78);}
+  .image-modal.open{display:flex;}
+  .image-modal-content{width:min(680px,100%);max-height:90vh;position:relative;border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.32);}
+  .image-modal img{display:block;width:100%;max-height:82vh;object-fit:contain;background:#fff;padding:18px;}
+  .image-modal-close{position:absolute;top:10px;inset-inline-end:10px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(14,42,46,.86);color:#fff;font-size:21px;cursor:pointer;}
 
   .body{padding:20px 24px 22px;}
   .eyebrow{
@@ -98,6 +107,8 @@
   .section h2{font-size:15px;margin:0 0 6px;color:var(--ink);}
   .section p{margin:0;font-size:14.5px;line-height:1.9;color:#3A4744;}
   .company{font-size:13.5px;color:var(--muted);margin-top:4px;}
+  .pack-details{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .pack-detail{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12.5px;color:#3A4744;}
 
   .warn{
     background:#FFF8ED;border:1px solid #F3E0B8;border-radius:12px;
@@ -132,6 +143,11 @@
   .cta-add-cart{background:var(--primary);color:#fff;}
 
   .not-found{padding:60px 20px;text-align:center;color:var(--muted);}
+  @media (max-width:540px){
+    .wrap{padding:12px;}
+    .body{padding:18px;}
+    .media img{padding:16px;}
+  }
 </style>
 </head>
 <body>
@@ -157,7 +173,23 @@ function getParam(name){
 }
 
 function money(p){
-  return `${p.price.toFixed(2)} ${p.currency === 'EGP' ? 'ج.م' : p.currency}`;
+  const price = Number(p.price);
+  const amount = Number.isFinite(price) ? price.toFixed(2).replace(/\.00$/, '') : '—';
+  return `${amount} ${p.currency === 'EGP' ? 'ج.م' : (p.currency || 'ج.م')}`;
+}
+
+function escapeHtml(value){
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getProductImages(product){
+  const gallery = Array.isArray(product.images) ? product.images : [];
+  return [...new Set([product.image, ...gallery].filter((image) => typeof image === 'string' && image.trim()))];
 }
 
 function renderNotFound(){
@@ -170,74 +202,118 @@ function renderNotFound(){
 
 function renderProduct(product, categories, alts){
   const cat = categories.find(c => c.id === product.category) || {};
-
+  const images = getProductImages(product);
+  const title = escapeHtml(product.trade_name || 'منتج صيدلي');
+  const activeIngredient = escapeHtml(product.active_ingredient || 'تواصل مع الصيدلي للتأكد من التفاصيل');
+  const company = escapeHtml(product.company || '');
   const waText = encodeURIComponent(
     product.available
       ? `أريد طلب: ${product.trade_name}`
       : `أسأل الصيدلي عن: ${product.trade_name} (شايف إنه غير متوفر حاليًا في الموقع)`
   );
+  const packDetails = [
+    ['الشكل الصيدلي', product.dosage_form],
+    ['التركيز', product.strength],
+    ['حجم العبوة', product.pack_size],
+  ].filter(([, value]) => value);
+  const mainMedia = images.length
+    ? `<button type="button" class="gallery-main" id="gallery-main" aria-label="تكبير صورة ${title}">
+        <img id="product-main-image" src="${escapeHtml(images[0])}" alt="${title}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'fallback\\'>${cat.icon || '💊'}</div>'">
+      </button>`
+    : `<div class="fallback" aria-hidden="true">${cat.icon || '💊'}</div>`;
+  const thumbs = images.length > 1 ? `
+      <div class="gallery-thumbs" aria-label="صور إضافية للمنتج">
+        ${images.map((image, index) => `<button type="button" class="gallery-thumb ${index === 0 ? 'active' : ''}" data-image-index="${index}" aria-label="عرض الصورة ${index + 1}">
+          <img src="${escapeHtml(image)}" alt="${title} — صورة ${index + 1}">
+        </button>`).join('')}
+      </div>` : '';
 
   document.getElementById('app').innerHTML = `
     <div class="card" style="--cat-color:${cat.color || '#0F5C55'}">
       <div class="stub"></div>
-      <div class="media">
-        <img src="${product.image}" alt="${product.trade_name}"
-             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'fallback\\'>${cat.icon || '💊'}</div>'">
-      </div>
+      <div class="media">${mainMedia}</div>
+      ${thumbs}
       <div class="body">
-        <span class="eyebrow">${cat.icon || ''} ${cat.name || ''}</span>
-        <h1>${product.trade_name}</h1>
-        <p class="generic">المادة الفعالة: ${product.active_ingredient}</p>
+        <span class="eyebrow">${cat.icon || ''} ${escapeHtml(cat.name || '')}</span>
+        <h1>${title}</h1>
+        <p class="generic">المادة الفعالة: ${activeIngredient}</p>
         <div class="barcode"></div>
 
         <div class="meta-row">
-          <div class="price">${money(product)}</div>
+          <div class="price">${product.available ? money(product) : 'غير متوفر'}</div>
           <span class="badge ${product.available ? 'in' : 'out'}">
             ${product.available ? '✔ متوفر بالصيدلية' : '✕ غير متوفر حاليًا'}
           </span>
         </div>
-        <div class="company">${product.company ? `الشركة المصنّعة: ${product.company}` : ''}</div>
+        <div class="company">${company ? `الشركة المصنّعة: ${company}` : ''}</div>
+        ${packDetails.length ? `<div class="pack-details">${packDetails.map(([label, value]) => `<span class="pack-detail">${escapeHtml(label)}: ${escapeHtml(value)}</span>`).join('')}</div>` : ''}
 
         ${product.short_uses ? `
         <div class="section">
           <h2>الاستخدامات</h2>
-          <p>${product.short_uses}</p>
+          <p>${escapeHtml(product.short_uses)}</p>
         </div>` : ''}
 
         ${product.warnings ? `
         <div class="section">
           <h2>تحذيرات مهمة</h2>
-          <div class="warn">${product.warnings}</div>
+          <div class="warn">${escapeHtml(product.warnings)}</div>
         </div>` : ''}
 
         ${product.general_dosage_note ? `
-        <div class="disclaimer">⚠️ ${product.general_dosage_note}</div>` : ''}
+        <div class="disclaimer">⚠️ ${escapeHtml(product.general_dosage_note)}</div>` : ''}
 
         ${alts.length ? `
         <div class="section">
           <h2>بدائل متاحة</h2>
           <div class="alts">
-            ${alts.map(a => `<a class="alt-chip" href="product.html?id=${a.id}">${a.trade_name}</a>`).join('')}
+            ${alts.map(a => `<a class="alt-chip" href="product.html?id=${encodeURIComponent(a.id)}">${escapeHtml(a.trade_name)}</a>`).join('')}
           </div>
         </div>` : ''}
       </div>
     </div>
   `;
 
-  document.title = `${product.trade_name} | صيدلية د. مرزوق الصاوي`;
+  document.title = `${product.trade_name || 'منتج'} | صيدلية د. مرزوق الصاوي`;
+
+  const mainImage = document.getElementById('product-main-image');
+  const mainButton = document.getElementById('gallery-main');
+  const openImageModal = () => {
+    if (!mainImage) return;
+    const modal = document.createElement('div');
+    modal.className = 'image-modal open';
+    modal.innerHTML = `<div class="image-modal-content" role="dialog" aria-modal="true" aria-label="صورة مكبرة للمنتج">
+      <button type="button" class="image-modal-close" aria-label="إغلاق">×</button>
+      <img src="${escapeHtml(mainImage.src)}" alt="${title}">
+    </div>`;
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal || event.target.closest('.image-modal-close')) modal.remove();
+    });
+    document.body.appendChild(modal);
+  };
+  if (mainButton) mainButton.addEventListener('click', openImageModal);
+  document.querySelectorAll('.gallery-thumb').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.imageIndex);
+      if (!mainImage || !images[index]) return;
+      mainImage.src = images[index];
+      document.querySelectorAll('.gallery-thumb').forEach((thumb) => thumb.classList.remove('active'));
+      button.classList.add('active');
+    });
+  });
 
   const bar = document.createElement('div');
   bar.className = 'cta-bar';
   bar.innerHTML = product.available
     ? `
     <button type="button" class="cta-add-cart" id="add-to-cart-btn">🛒 أضف للسلة</button>
-    <a class="cta-whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}?text=${waText}" target="_blank">
+    <a class="cta-whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}?text=${waText}" target="_blank" rel="noopener">
       💬 اطلب عبر واتساب
     </a>
   `
     : `
-    <a class="cta-call" style="flex:2;" href="https://wa.me/${WHATSAPP_NUMBER}?text=${waText}" target="_blank">
-      🩺 استشر الصيدلي (غير متوفر حاليًا)
+    <a class="cta-call" style="flex:2;" href="https://wa.me/${WHATSAPP_NUMBER}?text=${waText}" target="_blank" rel="noopener">
+      🩺 اسأل عن التوفر عبر واتساب
     </a>
   `;
   document.body.appendChild(bar);
@@ -249,7 +325,7 @@ function renderProduct(product, categories, alts){
         id: product.id,
         trade_name: product.trade_name,
         price: product.price,
-        image: product.image,
+        image: images[0] || '',
       });
     });
   }

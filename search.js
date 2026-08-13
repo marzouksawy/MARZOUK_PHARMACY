@@ -68,26 +68,56 @@ const PharmacySearch = (function () {
       .filter(Boolean);
   }
 
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function getPrimaryImage(product) {
+    const gallery = Array.isArray(product.images) ? product.images : [];
+    return [product.image, ...gallery].find((image) => typeof image === "string" && image.trim()) || "";
+  }
+
   function renderCard(product) {
     const cat = categories.find((c) => c.id === product.category) || {};
-    const thumb = product.image
-      ? `<img src="${product.image}" alt="${product.trade_name}" style="width:100%;height:100%;object-fit:contain;padding:6px;" loading="lazy">`
-      : cat.icon || "💊";
+    const title = escapeHtml(product.trade_name || "منتج صيدلي");
+    const active = escapeHtml(product.active_ingredient || "");
+    const uses = escapeHtml(product.short_uses || product.active_ingredient || "تواصل مع الصيدلي لمعرفة التفاصيل.");
+    const image = getPrimaryImage(product);
+    const alt = escapeHtml([product.trade_name, product.active_ingredient].filter(Boolean).join(" — ") || "صورة منتج صيدلي");
+    const available = product.available === true;
+    const currency = product.currency === "EGP" ? "ج.م" : escapeHtml(product.currency || "ج.م");
+    const price = Number.isFinite(Number(product.price)) ? Number(product.price).toFixed(2).replace(/\.00$/, "") : "—";
+    const availability = available ? "متوفر" : "غير متوفر";
+    const thumb = image
+      ? `<img src="${image}" alt="${alt}" loading="lazy">`
+      : `<span aria-hidden="true">${cat.icon || "💊"}</span>`;
+
     return `
-      <div class="prod-card">
-        <div class="prod-thumb"${product.image ? ' style="background:#f5f5f5;"' : ""}>${thumb}</div>
+      <article class="prod-card">
+        <a class="prod-image-link" href="product.html?id=${encodeURIComponent(product.id)}" aria-label="عرض تفاصيل ${title}">
+          <div class="prod-thumb">
+            <span class="prod-availability ${available ? "in" : "out"}">${availability}</span>
+            ${thumb}
+          </div>
+        </a>
         <div class="prod-body">
-          <h3>${product.trade_name}</h3>
-          <p>${product.short_uses || product.active_ingredient}</p>
+          <h3>${title}</h3>
+          <div class="prod-meta">${active ? `المادة الفعالة: ${active}` : `الفئة: ${escapeHtml(cat.name || "منتج صيدلي")}`}</div>
+          <p>${uses}</p>
           <div class="prod-foot">
-            <span class="prod-price">${product.available ? (product.price + " " + (product.currency === "EGP" ? "ج.م" : product.currency)) : "غير متوفر"}</span>
-            <div style="display:flex;gap:8px;">
-              ${product.available ? `<button type="button" class="prod-btn prod-cart-btn" data-id="${product.id}" style="border:none;cursor:pointer;font-family:inherit;">🛒</button>` : ""}
-              <a href="product.html?id=${product.id}" class="prod-btn">التفاصيل</a>
+            ${available ? `<span class="prod-price">${price} ${currency}</span>` : `<span class="prod-unavailable">غير متوفر حاليًا</span>`}
+            <div class="prod-actions">
+              ${available ? `<button type="button" class="prod-btn prod-cart-btn" data-id="${escapeHtml(product.id)}" aria-label="إضافة ${title} إلى السلة" style="border:none;cursor:pointer;font-family:inherit;">🛒</button>` : ""}
+              <a href="product.html?id=${encodeURIComponent(product.id)}" class="prod-btn">${available ? "التفاصيل" : "اسأل"}</a>
             </div>
           </div>
         </div>
-      </div>`;
+      </article>`;
   }
 
   function renderResults(container, results) {
